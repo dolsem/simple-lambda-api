@@ -10,14 +10,12 @@ import {
 import * as utils from './lib/utils';
 import * as logger from './lib/logger';
 
+type ApiOptions = Omit<Options, 'base'>;
+
 class API {
-  constructor(props: Options) {
+  constructor(props: ApiOptions) {
     // Set the version and base paths
     this._version = props && props.version ? props.version : 'v1';
-    this._base =
-      props && props.base && typeof props.base === 'string'
-        ? props.base.trim()
-        : '';
     this._callbackName =
       props && props.callback ? props.callback.trim() : 'callback';
     this._mimeTypes =
@@ -66,9 +64,6 @@ class API {
 
     // Configure logger
     this._logger = LOGGER.config(props && props.logger, this._logLevels);
-
-    // Prefix stack w/ base
-    this._prefix = this.parseRoute(this._base);
 
     // Stores route mappings
     this._routes = {};
@@ -485,14 +480,6 @@ class API {
   //-------------------------------------------------------------------------//
   // UTILITY FUNCTIONS
   //-------------------------------------------------------------------------//
-
-  parseRoute(path) {
-    return path
-      .trim()
-      .replace(/^\/(.*?)(\/)*$/, '$1')
-      .split('/')
-      .filter((x) => x.trim() !== '');
-  }
 
   // Load app packages
   app(packages) {
