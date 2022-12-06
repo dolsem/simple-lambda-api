@@ -1,15 +1,17 @@
+import type {
+  // API as LambdaAPI,
+  Options,
+} from './types';
+import {
+  Request,
+  Response,
+  ConfigurationError,
+} from './lib';
+import * as utils from './lib/utils';
+import * as logger from './lib/logger';
 
-const REQUEST = require('./lib/request'); // Resquest object
-const RESPONSE = require('./lib/response'); // Response object
-const UTILS = require('./lib/utils'); // Require utils library
-const LOGGER = require('./lib/logger'); // Require logger library
-const prettyPrint = require('./lib/prettyPrint'); // Pretty print for debugging
-const { ConfigurationError } = require('./lib/errors'); // Require custom errors
-
-// Create the API class
 class API {
-  // Create the constructor function.
-  constructor(props) {
+  constructor(props: Options) {
     // Set the version and base paths
     this._version = props && props.version ? props.version : 'v1';
     this._base =
@@ -533,18 +535,6 @@ class API {
       this._prefix = this._prefix.slice(0, -prefix.length);
     }
   } // end register
-
-  // prettyPrint debugger
-  routes(format) {
-    // Parse the routes
-    let routes = UTILS.extractRoutes(this._routes);
-
-    if (format) {
-      console.log(prettyPrint(routes)); // eslint-disable-line no-console
-    } else {
-      return routes;
-    }
-  }
-} // end API class
+}
 
 export default (opts) => new API(opts);
