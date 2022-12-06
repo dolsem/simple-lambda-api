@@ -1,11 +1,3 @@
-'use strict';
-
-/**
- * Lightweight web framework for your serverless applications
- * @author Jeremy Daly <jeremy@jeremydaly.com>
- * @version 0.11.0
- * @license MIT
- */
 
 const REQUEST = require('./lib/request'); // Resquest object
 const RESPONSE = require('./lib/response'); // Response object
@@ -555,7 +547,4 @@ class API {
   }
 } // end API class
 
-// Export the API class as a new instance
-module.exports = (opts) => new API(opts);
-// Add createAPI as default export (to match index.d.ts)
-module.exports.default = module.exports;
+export default (opts) => new API(opts);
