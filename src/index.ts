@@ -12,12 +12,50 @@ import * as logger from './lib/logger';
 
 type ApiOptions = Omit<Options, 'base'>;
 
+const LOG_LEVELS = {
+  trace: 10,
+  debug: 20,
+  info: 30,
+  warn: 40,
+  error: 50,
+  fatal: 60,
+};
+
 class API {
+  _logger: ReturnType<typeof logger.config>;
+  _callbackName: string;
+  _version: string;
+
+  _mimeTypes: ApiOptions['mimeTypes'];
+  _serializer: ApiOptions['serializer'];
+  _errorHeaderWhitelist: ApiOptions['errorHeaderWhitelist'];
+  _isBase64: ApiOptions['isBase64'];
+  _headers: ApiOptions['headers'];
+  _compression: ApiOptions['compression'];
+
+  // Set sampling info
+  _sampleCounts = {};
+
+  // Init request counter
+  _requestCount = 0;
+
+  // Track init date/time
+  _initTime = Date.now();
+
+  // Error middleware stack
+  _errors = [];
+
+  // Executed after the callback
+  _finally = () => {};
+
+  // Global error status (used for response parsing errors)
+  _errorStatus = 500;
+
   constructor(props: ApiOptions) {
     // Set the version and base paths
     this._version = props && props.version ? props.version : 'v1';
     this._callbackName =
-      props && props.callback ? props.callback.trim() : 'callback';
+      props && props.callbackName ? props.callbackName.trim() : 'callback';
     this._mimeTypes =
       props && props.mimeTypes && typeof props.mimeTypes === 'object'
         ? props.mimeTypes
@@ -43,62 +81,9 @@ class API {
         ? props.compression
         : false;
 
-    // Set sampling info
-    this._sampleCounts = {};
-
-    // Init request counter
-    this._requestCount = 0;
-
-    // Track init date/time
-    this._initTime = Date.now();
-
-    // Logging levels
-    this._logLevels = {
-      trace: 10,
-      debug: 20,
-      info: 30,
-      warn: 40,
-      error: 50,
-      fatal: 60,
-    };
-
     // Configure logger
-    this._logger = LOGGER.config(props && props.logger, this._logLevels);
+    this._logger = logger.config(props && props.logger, LOG_LEVELS);
 
-    // Stores route mappings
-    this._routes = {};
-
-    // Init callback
-    this._cb;
-
-    // Error middleware stack
-    this._errors = [];
-
-    // Store app packages and namespaces
-    this._app = {};
-
-    // Executed after the callback
-    this._finally = () => {};
-
-    // Global error status (used for response parsing errors)
-    this._errorStatus = 500;
-
-    // Methods
-    this._methods = [
-      'get',
-      'post',
-      'put',
-      'patch',
-      'delete',
-      'options',
-      'head',
-      'any',
-    ];
-
-    // Convenience methods for METHOD
-    this._methods.forEach((m) => {
-      this[m] = (...a) => this.METHOD(m.toUpperCase(), ...a);
-    });
   } // end constructor
 
   // METHOD: Adds method, middleware, and handlers to routes
@@ -279,11 +264,10 @@ class API {
   } // end main METHOD function
 
   // RUN: This runs the routes
-  async run(event, context, cb) {
+  async run(event, context) {
     // Set the event, context and callback
     this._event = event || {};
     this._context = this.context = typeof context === 'object' ? context : {};
-    this._cb = cb ? cb : undefined;
 
     // Initalize request and response objects
     let request = new REQUEST(this);
@@ -431,9 +415,6 @@ class API {
 
     // Reset global error code
     this._errorStatus = 500;
-
-    // Execute the primary callback
-    typeof this._cb === 'function' && this._cb(err, res);
   } // end _callback
 
   // Middleware handler
@@ -480,26 +461,6 @@ class API {
   //-------------------------------------------------------------------------//
   // UTILITY FUNCTIONS
   //-------------------------------------------------------------------------//
-
-  // Load app packages
-  app(packages) {
-    // Check for supplied packages
-    if (typeof packages === 'object') {
-      // Loop through and set package namespaces
-      for (let namespace in packages) {
-        try {
-          this._app[namespace] = packages[namespace];
-        } catch (e) {
-          console.error(e.message); // eslint-disable-line no-console
-        }
-      }
-    } else if (arguments.length === 2 && typeof packages === 'string') {
-      this._app[packages] = arguments[1];
-    } // end if
-
-    // Return a reference
-    return this._app;
-  }
 
   // Register routes with options
   register(fn, opts) {

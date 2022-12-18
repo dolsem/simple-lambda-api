@@ -39,10 +39,6 @@ export declare interface RegisterOptions {
 
 export type Package = any;
 
-export declare interface App {
-  [namespace: string]: Package;
-}
-
 export declare type Middleware = (
   req: Request,
   res: Response,
@@ -168,7 +164,6 @@ export declare class Request {
   userAgent: string;
   clientType: 'desktop' | 'mobile' | 'tv' | 'tablet' | 'unknown';
   clientCountry: string;
-  namespace: App;
 
   log: {
     trace: LoggerFunction;
@@ -225,9 +220,6 @@ export declare class Response {
 }
 
 export declare class API {
-  app(namespace: string, package: Package): App;
-  app(packages: App): App;
-
   get(path: string, ...handler: HandlerFunction[]): void;
   get(path: string, middleware: Middleware, ...handler: HandlerFunction[]): void;
   get(...handler: HandlerFunction[]): void;

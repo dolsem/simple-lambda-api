@@ -32,9 +32,6 @@ class REQUEST {
     // Init the execution stack
     this._stack;
 
-    // Expose Namespaces
-    this.namespace = this.ns = app._app;
-
     // Set the version
     this.version = app._version;
 
