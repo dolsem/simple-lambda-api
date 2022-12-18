@@ -1,9 +1,13 @@
 import type { APIGatewayEvent, Context } from 'aws-lambda';
+import type { L } from 'ts-toolbelt';
+
 import type {
   FinallyFunction,
   HandlerFunction,
-  API as LambdaAPI,
+  Stack,
   Options,
+  Middleware,
+  ErrorHandlingMiddleware,
 } from './types';
 import {
   Request,
@@ -23,43 +27,43 @@ const LOG_LEVELS = {
   fatal: 60,
 };
 
-class API {
-  _logger: ReturnType<typeof logger.config>;
-  _callbackName: string;
-  _version: string;
+class API<S extends Stack = []> {
+  private _logger: ReturnType<typeof logger.config>;
+  private _callbackName: string;
+  private _version: string;
 
-  _mimeTypes: ApiOptions['mimeTypes'];
-  _serializer: ApiOptions['serializer'];
-  _errorHeaderWhitelist: ApiOptions['errorHeaderWhitelist'];
-  _isBase64: ApiOptions['isBase64'];
-  _headers: ApiOptions['headers'];
-  _compression: ApiOptions['compression'];
+  private _mimeTypes: ApiOptions['mimeTypes'];
+  private _serializer: ApiOptions['serializer'];
+  private _errorHeaderWhitelist: ApiOptions['errorHeaderWhitelist'];
+  private _isBase64: ApiOptions['isBase64'];
+  private _headers: ApiOptions['headers'];
+  private _compression: ApiOptions['compression'];
 
   // Set sampling info
-  _sampleCounts = {};
+  private _sampleCounts = {};
 
   // Init request counter
-  _requestCount = 0;
+  private _requestCount = 0;
 
   // Track init date/time
-  _initTime = Date.now();
+  private _initTime = Date.now();
 
-  _handler: HandlerFunction;
+  private _handler: HandlerFunction<S>;
 
   // Middleware stack
-  _stack = [];
+  private _stack = [];
 
   // Error middleware stack
-  _errors = [];
+  private _errors = [];
 
   // Executed after the callback
-  _finally: FinallyFunction = () => {};
+  private _finally: FinallyFunction<S> = () => {};
 
   // Global error status (used for response parsing errors)
-  _errorStatus = 500;
+  private _errorStatus = 500;
 
-  _event: APIGatewayEvent;
-  _context: Context;
+  private _event: APIGatewayEvent;
+  private _context: Context;
 
   constructor(props: ApiOptions) {
     // Set the version and base paths
@@ -96,13 +100,15 @@ class API {
 
   } // end constructor
 
-  handle(handler: HandlerFunction) {
+  handle(handler: HandlerFunction<S>) {
     if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
       this._stack[this._stack.length - 1] = handler;
     } else {
       this._stack.push(handler);
     }
     this._handler = handler;
+
+    return this;
   }
 
   // RUN: This handles the event and returns response
@@ -116,17 +122,17 @@ class API {
     this._context = context;
 
     // Initalize request and response objects
-    const request = new Request(this);
-    const response = new Response(this, request);
+    const request = new Request<S>(this);
+    const response = new Response<S>(this, request);
 
     try {
       // Parse the request
-      await request.parseRequest();
+      await (request as any).parseRequest();
 
       // Loop through the execution stack
       for (const fn of this._stack) {
         // Only run if in processing state
-        if (response._state !== 'processing') break;
+        if ((response as any)._state !== 'processing') break;
 
         // eslint-disable-next-line
         await new Promise<void>(async (r) => {
@@ -135,7 +141,7 @@ class API {
               r();
             });
             if (rtn) response.send(rtn);
-            if (response._state === 'done') r(); // if state is done, resolve promise
+            if ((response as any)._state === 'done') r(); // if state is done, resolve promise
           } catch (e) {
             await this.catchErrors(e, response);
             r(); // resolve the promise
@@ -148,11 +154,51 @@ class API {
     }
 
     // Return the final response
-    return response._response;
+    return (response as any)._response;
   } // end run function
 
+  // Middleware handler
+  use<S2 extends Stack = []>(...args: Middleware<S>[]) {
+    // Init middleware stack
+
+    // Add func args as middleware
+    for (let arg in args) {
+      if (typeof args[arg] === 'function') {
+        if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
+          this._stack[this._stack.length - 1] = args[arg];
+          this._stack.push(this._handler);
+        } else {
+          this._stack.push(args[arg]);
+        }
+      } else {
+        throw new ConfigurationError(
+          'Middleware must be a function'
+        );
+      }
+    }
+    return this as API<L.Concat<S, S2>>;
+  } // end use
+
+  handleErrors<S2 extends Stack = []>(...args: ErrorHandlingMiddleware<S>[]) {
+    for (let arg in args) {
+      if (typeof args[arg] === 'function') {
+        this._errors.push(args[arg]);
+      } else {
+        throw new ConfigurationError(
+          'Error handler must be a function'
+        );
+      }
+    }
+    return this as API<L.Concat<S, S2>>;
+  }
+
+  // Finally handler
+  finally(fn: FinallyFunction<S>) {
+    this._finally = fn;
+  }
+
   // Catch all async/sync errors
-  async catchErrors(e: Error, response, code?: number, detail?: string) {
+  protected async catchErrors(e: Error, response, code?: number, detail?: string) {
     // Error messages should respect the app's base64 configuration
     response._isBase64 = this._isBase64;
 
@@ -218,7 +264,7 @@ class API {
   } // end catch
 
   // Custom callback
-  async _callback(err, res, response) {
+  protected async _callback(err, res, response) {
     // Set done status
     response._state = 'done';
 
@@ -262,36 +308,6 @@ class API {
     // Reset global error code
     this._errorStatus = 500;
   } // end _callback
-
-  // Middleware handler
-  use(...args) {
-    // Init middleware stack
-
-    // Add func args as middleware
-    for (let arg in args) {
-      if (typeof args[arg] === 'function') {
-        if (args[arg].length === 3) {
-          if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
-            this._stack[this._stack.length - 1] = args[arg];
-            this._stack.push(this._handler);
-          } else {
-            this._stack.push(args[arg]);
-          }
-        } else if (args[arg].length === 4) {
-          this._errors.push(args[arg]);
-        } else {
-          throw new ConfigurationError(
-            'Middleware must have 3 or 4 parameters'
-          );
-        }
-      }
-    }
-  } // end use
-
-  // Finally handler
-  finally(fn) {
-    this._finally = fn;
-  }
 }
 
-export default (opts: Options) => new API(opts) as LambdaAPI;
+export default API;

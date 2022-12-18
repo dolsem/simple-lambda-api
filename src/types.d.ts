@@ -4,6 +4,7 @@ import {
   APIGatewayProxyEventV2,
   Context,
 } from 'aws-lambda';
+import { A, U } from 'ts-toolbelt';
 
 export declare interface CookieOptions {
   domain?: string;
@@ -39,21 +40,21 @@ export declare interface RegisterOptions {
 
 export type Package = any;
 
-export declare type Middleware = (
-  req: Request,
-  res: Response,
+export declare type Middleware<S extends Stack = []> = (
+  req: Request<S>,
+  res: Response<S>,
   next: () => void
 ) => void;
-export declare type ErrorHandlingMiddleware = (
+export declare type ErrorHandlingMiddleware<S extends Stack = []> = (
   error: Error,
-  req: Request,
-  res: Response,
+  req: Request<S>,
+  res: Response<S>,
   next: () => void
 ) => void;
 export declare type ErrorCallback = (error?: Error) => void;
-export declare type HandlerFunction = (
-  req: Request,
-  res: Response
+export declare type HandlerFunction<S extends Stack = []> = (
+  req: Request<S>,
+  res: Response<S>
 ) => void | any | Promise<any>;
 export declare type LoggerFunction = (
   message?: any,
@@ -62,7 +63,7 @@ export declare type LoggerFunction = (
 export declare type NextFunction = () => void;
 export declare type TimestampFunction = () => string;
 export declare type SerializerFunction = (body: object) => string;
-export declare type FinallyFunction = (req: Request, res: Response) => void;
+export declare type FinallyFunction<S extends Stack = []> = (req: Request<S>, res: Response<S>) => void;
 export declare type METHODS =
   | 'GET'
   | 'POST'
@@ -119,7 +120,9 @@ export declare interface Options {
   headers?: object;
 }
 
-export declare class Request {
+export declare type Stack = { Req: object; Res: object }[];
+
+export declare class Request<S extends Stack = []> {
   constructor(app: API);
 
   app: API;
@@ -173,10 +176,10 @@ export declare class Request {
     fatal: LoggerFunction;
   };
 
-  [key: string]: any;
+  ext: { [K in keyof (U.IntersectOf<S[number]['Req']>)]: U.IntersectOf<S[number]['Req']>[K]; }
 }
 
-export declare class Response {
+export declare class Response<S extends Stack = []> {
   constructor(app: API, request: Request);
 
   status(code: number): this;
@@ -218,17 +221,8 @@ export declare class Response {
     options?: FileOptions,
     callback?: ErrorCallback
   ): Promise<void>;
-}
 
-export declare class API {
-  handle(handler: HandlerFunction): void;
-
-  use(...middleware: Middleware[]): void;
-  use(...errorHandlingMiddleware: ErrorHandlingMiddleware[]): void;
-
-  finally(callback: FinallyFunction): void;
-
-  run(event: APIGatewayEvent, context: Context): Promise<any>;
+  ext: { [K in keyof (U.IntersectOf<S[number]['Res']>)]: U.IntersectOf<S[number]['Res']>[K]; }
 }
 
 export declare class RouteError extends Error {
