@@ -1,5 +1,8 @@
+import type { APIGatewayEvent, Context } from 'aws-lambda';
 import type {
-  // API as LambdaAPI,
+  FinallyFunction,
+  HandlerFunction,
+  API as LambdaAPI,
   Options,
 } from './types';
 import {
@@ -7,7 +10,6 @@ import {
   Response,
   ConfigurationError,
 } from './lib';
-import * as utils from './lib/utils';
 import * as logger from './lib/logger';
 
 type ApiOptions = Omit<Options, 'base'>;
@@ -42,14 +44,22 @@ class API {
   // Track init date/time
   _initTime = Date.now();
 
+  _handler: HandlerFunction;
+
+  // Middleware stack
+  _stack = [];
+
   // Error middleware stack
   _errors = [];
 
   // Executed after the callback
-  _finally = () => {};
+  _finally: FinallyFunction = () => {};
 
   // Global error status (used for response parsing errors)
   _errorStatus = 500;
+
+  _event: APIGatewayEvent;
+  _context: Context;
 
   constructor(props: ApiOptions) {
     // Set the version and base paths
@@ -86,204 +96,40 @@ class API {
 
   } // end constructor
 
-  // METHOD: Adds method, middleware, and handlers to routes
-  METHOD(method, ...args) {
-    // Extract path if provided, otherwise default to global wildcard
-    let path = typeof args[0] === 'string' ? args.shift() : '/*';
+  handle(handler: HandlerFunction) {
+    if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
+      this._stack[this._stack.length - 1] = handler;
+    } else {
+      this._stack.push(handler);
+    }
+    this._handler = handler;
+  }
 
-    // Extract the execution stack
-    let stack = args.map((fn, i) => {
-      if (
-        typeof fn === 'function' &&
-        (fn.length === 3 || i === args.length - 1)
-      )
-        return fn;
-      throw new ConfigurationError(
-        'Route-based middleware must have 3 parameters'
-      );
-    });
-
-    if (stack.length === 0)
-      throw new ConfigurationError(
-        `No handler or middleware specified for ${method} method on ${path} route.`
-      );
-
-    // Ensure methods is an array and upper case
-    let methods = (Array.isArray(method) ? method : method.split(',')).map(
-      (x) => (typeof x === 'string' ? x.trim().toUpperCase() : null)
-    );
-
-    // Parse the path
-    let parsedPath = this.parseRoute(path);
-
-    // Split the route and clean it up
-    let route = this._prefix.concat(parsedPath);
-
-    // For root path support
-    if (route.length === 0) {
-      route.push('');
+  // RUN: This handles the event and returns response
+  async run(event: APIGatewayEvent, context: Context) {
+    if (this._stack.length < 1) {
+      throw new ConfigurationError('No handler or middleware specified.');
     }
 
-    // Keep track of path variables
-    let pathVars = {};
-
-    // Make a local copy of routes
-    let routes = this._routes;
-
-    // Create a local stack for inheritance
-    let _stack = { '*': [], m: [] };
-
-    // Loop through the path levels
-    for (let i = 0; i < route.length; i++) {
-      // Flag as end of the path
-      let end = i === route.length - 1;
-
-      // If this is a parameter variable
-      if (/^:(.*)$/.test(route[i])) {
-        // Assign it to the pathVars (trim off the : at the beginning)
-        pathVars[i] = [route[i].substr(1)];
-        // Set the route to __VAR__
-        route[i] = '__VAR__';
-      } // end if variable
-
-      // Create routes and add path if they don't exist
-      if (!routes['ROUTES']) {
-        routes['ROUTES'] = {};
-      }
-      if (!routes['ROUTES'][route[i]]) {
-        routes['ROUTES'][route[i]] = {};
-      }
-
-      // Loop through methods for the route
-      methods.forEach((_method) => {
-        // Method must be a string
-        if (typeof _method === 'string') {
-          // Check for wild card at this level
-          if (routes['ROUTES']['*']) {
-            if (
-              routes['ROUTES']['*']['MIDDLEWARE'] &&
-              (route[i] !== '*' || _method !== '__MW__')
-            ) {
-              _stack['*'][method] = routes['ROUTES']['*']['MIDDLEWARE'].stack;
-            }
-            if (
-              routes['ROUTES']['*']['METHODS'] &&
-              routes['ROUTES']['*']['METHODS'][method]
-            ) {
-              _stack['m'][method] =
-                routes['ROUTES']['*']['METHODS'][method].stack;
-            }
-          } // end if wild card
-
-          // If this is the end of the path
-          if (end) {
-            // Check for matching middleware
-            if (
-              route[i] !== '*' &&
-              routes['ROUTES'][route[i]] &&
-              routes['ROUTES'][route[i]]['MIDDLEWARE']
-            ) {
-              _stack['m'][method] =
-                routes['ROUTES'][route[i]]['MIDDLEWARE'].stack;
-            } // end if
-
-            // Generate the route/method meta data
-            let meta = {
-              vars: pathVars,
-              stack: _stack['m'][method]
-                ? _stack['m'][method].concat(stack)
-                : _stack['*'][method]
-                ? _stack['*'][method].concat(stack)
-                : stack,
-              // inherited: _stack[method] ? _stack[method] : [],
-              route: '/' + parsedPath.join('/'),
-              path: '/' + this._prefix.concat(parsedPath).join('/'),
-            };
-
-            // If mounting middleware
-            if (method === '__MW__') {
-              // Merge stacks if middleware exists
-              if (routes['ROUTES'][route[i]]['MIDDLEWARE']) {
-                meta.stack =
-                  routes['ROUTES'][route[i]]['MIDDLEWARE'].stack.concat(stack);
-                meta.vars = UTILS.mergeObjects(
-                  routes['ROUTES'][route[i]]['MIDDLEWARE'].vars,
-                  pathVars
-                );
-              }
-              // Add/update middleware
-              routes['ROUTES'][route[i]]['MIDDLEWARE'] = meta;
-
-              // Apply middleware to all child middlware routes
-              // if (route[i] === "*") {
-              //   // console.log("APPLY NESTED MIDDLEWARE");
-              //   // console.log(JSON.stringify(routes["ROUTES"], null, 2));
-              //   Object.keys(routes["ROUTES"]).forEach((nestedRoute) => {
-              //     if (nestedRoute != "*") {
-              //       console.log(nestedRoute);
-              //     }
-              //   });
-              // }
-            } else {
-              // Create the methods section if it doesn't exist
-              if (!routes['ROUTES'][route[i]]['METHODS'])
-                routes['ROUTES'][route[i]]['METHODS'] = {};
-
-              // Merge stacks if method already exists for this route
-              if (routes['ROUTES'][route[i]]['METHODS'][_method]) {
-                meta.stack =
-                  routes['ROUTES'][route[i]]['METHODS'][_method].stack.concat(
-                    stack
-                  );
-                meta.vars = UTILS.mergeObjects(
-                  routes['ROUTES'][route[i]]['METHODS'][_method].vars,
-                  pathVars
-                );
-              }
-
-              // Add method and meta data
-              routes['ROUTES'][route[i]]['METHODS'][_method] = meta;
-            } // end else
-
-            // console.log('STACK:',meta);
-
-            // If there's a wild card that's not at the end
-          } else if (route[i] === '*') {
-            throw new ConfigurationError(
-              'Wildcards can only be at the end of a route definition'
-            );
-          } // end if end of path
-        } // end if method is string
-      }); // end methods loop
-
-      // Update the current routes pointer
-      routes = routes['ROUTES'][route[i]];
-    } // end path traversal loop
-
-    // console.log(JSON.stringify(this._routes,null,2));
-  } // end main METHOD function
-
-  // RUN: This runs the routes
-  async run(event, context) {
     // Set the event, context and callback
-    this._event = event || {};
-    this._context = this.context = typeof context === 'object' ? context : {};
+    this._event = event;
+    this._context = context;
 
     // Initalize request and response objects
-    let request = new REQUEST(this);
-    let response = new RESPONSE(this, request);
+    const request = new Request(this);
+    const response = new Response(this, request);
 
     try {
       // Parse the request
       await request.parseRequest();
 
       // Loop through the execution stack
-      for (const fn of request._stack) {
+      for (const fn of this._stack) {
         // Only run if in processing state
         if (response._state !== 'processing') break;
 
         // eslint-disable-next-line
-        await new Promise(async (r) => {
+        await new Promise<void>(async (r) => {
           try {
             let rtn = await fn(request, response, () => {
               r();
@@ -306,7 +152,7 @@ class API {
   } // end run function
 
   // Catch all async/sync errors
-  async catchErrors(e, response, code, detail) {
+  async catchErrors(e: Error, response, code?: number, detail?: string) {
     // Error messages should respect the app's base64 configuration
     response._isBase64 = this._isBase64;
 
@@ -324,7 +170,7 @@ class API {
 
     response._headers = Object.assign(strippedHeaders, this._headers);
 
-    let message;
+    let message: string;
 
     // Set the status code
     response.status(code ? code : this._errorStatus);
@@ -339,12 +185,12 @@ class API {
     if (e instanceof Error) {
       message = e.message;
       if (this._logger.errorLogging) {
-        this.log.fatal(message, info);
+        this._logger.fatal(message, info);
       }
     } else {
       message = e;
       if (this._logger.errorLogging) {
-        this.log.error(message, info);
+        this._logger.error(message, info);
       }
     }
 
@@ -357,7 +203,7 @@ class API {
       for (const err of this._errors) {
         if (response._state === 'done') break;
         // Promisify error middleware
-        await new Promise(async (r) => {
+        await new Promise<void>(async (r) => {
           let rtn = await err(e, response._request, response, () => {
             r();
           });
@@ -419,22 +265,18 @@ class API {
 
   // Middleware handler
   use(...args) {
-    // Extract routes
-    let routes =
-      typeof args[0] === 'string'
-        ? Array.of(args.shift())
-        : Array.isArray(args[0])
-        ? args.shift()
-        : ['/*'];
-
     // Init middleware stack
-    let middleware = [];
 
     // Add func args as middleware
     for (let arg in args) {
       if (typeof args[arg] === 'function') {
         if (args[arg].length === 3) {
-          middleware.push(args[arg]);
+          if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
+            this._stack[this._stack.length - 1] = args[arg];
+            this._stack.push(this._handler);
+          } else {
+            this._stack.push(args[arg]);
+          }
         } else if (args[arg].length === 4) {
           this._errors.push(args[arg]);
         } else {
@@ -444,45 +286,12 @@ class API {
         }
       }
     }
-
-    // Add middleware for all methods
-    if (middleware.length > 0) {
-      routes.forEach((route) => {
-        this.METHOD('__MW__', route, ...middleware);
-      });
-    }
   } // end use
 
   // Finally handler
   finally(fn) {
     this._finally = fn;
   }
-
-  //-------------------------------------------------------------------------//
-  // UTILITY FUNCTIONS
-  //-------------------------------------------------------------------------//
-
-  // Register routes with options
-  register(fn, opts) {
-    let options = typeof opts === 'object' ? opts : {};
-
-    // Extract Prefix
-    let prefix =
-      options.prefix && options.prefix.toString().trim() !== ''
-        ? this.parseRoute(options.prefix)
-        : [];
-
-    // Concat to existing prefix
-    this._prefix = this._prefix.concat(prefix);
-
-    // Execute the routing function
-    fn(this, options);
-
-    // Remove the last prefix (if a prefix exists)
-    if (prefix.length > 0) {
-      this._prefix = this._prefix.slice(0, -prefix.length);
-    }
-  } // end register
 }
 
-export default (opts) => new API(opts);
+export default (opts: Options) => new API(opts) as LambdaAPI;

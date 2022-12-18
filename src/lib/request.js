@@ -9,7 +9,6 @@
 const QS = require('querystring'); // Require the querystring library
 const UTILS = require('./utils'); // Require utils library
 const LOGGER = require('./logger'); // Require logger library
-const { RouteError, MethodError } = require('./errors'); // Require custom errors
 
 class REQUEST {
   // Create the constructor function.
@@ -29,14 +28,8 @@ class REQUEST {
     // Init the handler
     this._handler;
 
-    // Init the execution stack
-    this._stack;
-
     // Set the version
     this.version = app._version;
-
-    // Init the params
-    this.params = {};
 
     // Init headers
     this.headers = {};
@@ -183,7 +176,7 @@ class REQUEST {
     this.interface = this.requestContext.elb ? 'alb' : 'apigateway';
 
     // Set the pathParameters
-    this.pathParameters = this.app._event.pathParameters || {};
+    this.params = this.app._event.pathParameters || {};
 
     // Set the stageVariables
     this.stageVariables = this.app._event.stageVariables || {};
@@ -237,93 +230,10 @@ class REQUEST {
       this.body = UTILS.parseBody(this.body);
     }
 
-    // Init the stack reporter
-    this.stack = null;
-
-    // Extract path from event (strip querystring just in case)
-    let path = UTILS.parsePath(this.path);
-
-    // Init the route
-    this.route = null;
-
-    // Create a local routes reference
-    let routes = this.app._routes;
-
-    // Init wildcard
-    let wc = [];
-
-    // Loop the routes and see if this matches
-    for (let i = 0; i < path.length; i++) {
-      // Capture wildcard routes
-      if (routes['ROUTES'] && routes['ROUTES']['*']) {
-        wc.push(routes['ROUTES']['*']);
-      }
-
-      // Traverse routes
-      if (routes['ROUTES'] && routes['ROUTES'][path[i]]) {
-        routes = routes['ROUTES'][path[i]];
-      } else if (routes['ROUTES'] && routes['ROUTES']['__VAR__']) {
-        routes = routes['ROUTES']['__VAR__'];
-      } else if (
-        wc[wc.length - 1] &&
-        wc[wc.length - 1]['METHODS'] &&
-        // && (wc[wc.length-1]['METHODS'][this.method] || wc[wc.length-1]['METHODS']['ANY'])
-        ((this.method !== 'OPTIONS' &&
-          Object.keys(wc[wc.length - 1]['METHODS']).toString() !== 'OPTIONS') ||
-          this.validWildcard(wc, this.method))
-      ) {
-        routes = wc[wc.length - 1];
-      } else {
-        this.app._errorStatus = 404;
-        throw new RouteError('Route not found', '/' + path.join('/'));
-      }
-    } // end for loop
-
-    // Grab the deepest wildcard path
-    let wildcard = wc.pop();
-
-    // Select ROUTE if exist for method, default ANY, apply wildcards, alias HEAD requests
-    let route =
-      routes['METHODS'] && routes['METHODS'][this.method]
-        ? routes['METHODS'][this.method]
-        : routes['METHODS'] && routes['METHODS']['ANY']
-        ? routes['METHODS']['ANY']
-        : wildcard && wildcard['METHODS'] && wildcard['METHODS'][this.method]
-        ? wildcard['METHODS'][this.method]
-        : wildcard && wildcard['METHODS'] && wildcard['METHODS']['ANY']
-        ? wildcard['METHODS']['ANY']
-        : this.method === 'HEAD' &&
-          routes['METHODS'] &&
-          routes['METHODS']['GET']
-        ? routes['METHODS']['GET']
-        : undefined;
-
-    // Check for the requested method
-    if (route) {
-      // Assign path parameters
-      for (let x in route.vars) {
-        route.vars[x].map((y) => (this.params[y] = path[x]));
-      } // end for
-
-      // Set the route used
-      this.route = route.route;
-
-      // Set the execution stack
-      // this._stack = route.inherited.concat(route.stack);
-      this._stack = route.stack;
-
-      // Set the stack reporter
-      this.stack = this._stack.map((x) =>
-        x.name.trim() !== '' ? x.name : 'unnamed'
-      );
-    } else {
-      this.app._errorStatus = 405;
-      throw new MethodError(
-        'Method not allowed',
-        this.method,
-        '/' + path.join('/')
-      );
-    }
+    // Set the stack reporter
+    this.stack = this.app._stack.map((x) =>
+      x.name.trim() !== '' ? x.name : 'unnamed'
+    );
 
     // Reference to sample rule
     this._sampleRule = {};
@@ -340,14 +250,6 @@ class REQUEST {
           this._sample ? this._sample : this.app._logger.level
         ] &&
       this._logs.push(this.app._logger.log(...args));
-  }
-
-  // Recursive wildcard function
-  validWildcard(wc) {
-    return (
-      Object.keys(wc[wc.length - 1]['METHODS']).length > 1 ||
-      (wc.length > 1 && this.validWildcard(wc.slice(0, -1)))
-    );
   }
 } // end REQUEST class
 

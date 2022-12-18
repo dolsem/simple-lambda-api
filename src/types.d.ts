@@ -53,8 +53,7 @@ export declare type ErrorHandlingMiddleware = (
 export declare type ErrorCallback = (error?: Error) => void;
 export declare type HandlerFunction = (
   req: Request,
-  res: Response,
-  next?: NextFunction
+  res: Response
 ) => void | any | Promise<any>;
 export declare type LoggerFunction = (
   message?: any,
@@ -107,7 +106,6 @@ export declare interface LoggerOptions {
 }
 
 export declare interface Options {
-  base?: string;
   callbackName?: string;
   logger?: boolean | LoggerOptions;
   mimeTypes?: {
@@ -149,7 +147,6 @@ export declare class Request {
   route: '';
   requestContext: APIGatewayEventRequestContext;
   isBase64Encoded: boolean;
-  pathParameters: { [name: string]: string } | null;
   stageVariables: { [name: string]: string } | null;
   auth: {
     [key: string]: any;
@@ -224,52 +221,14 @@ export declare class Response {
 }
 
 export declare class API {
-  get(path: string, ...handler: HandlerFunction[]): void;
-  get(path: string, middleware: Middleware, ...handler: HandlerFunction[]): void;
-  get(...handler: HandlerFunction[]): void;
-  post(path: string, ...handler: HandlerFunction[]): void;
-  post(...handler: HandlerFunction[]): void;
-  put(path: string, ...handler: HandlerFunction[]): void;
-  put(...handler: HandlerFunction[]): void;
-  patch(path: string, ...handler: HandlerFunction[]): void;
-  patch(...handler: HandlerFunction[]): void;
-  delete(path: string, ...handler: HandlerFunction[]): void;
-  delete(...handler: HandlerFunction[]): void;
-  options(path: string, ...handler: HandlerFunction[]): void;
-  options(...handler: HandlerFunction[]): void;
-  head(path: string, ...handler: HandlerFunction[]): void;
-  head(...handler: HandlerFunction[]): void;
-  any(path: string, ...handler: HandlerFunction[]): void;
-  any(...handler: HandlerFunction[]): void;
-  METHOD(
-    method: METHODS | METHODS[],
-    path: string,
-    ...handler: HandlerFunction[]
-  ): void;
-  METHOD(method: METHODS | METHODS[], ...handler: HandlerFunction[]): void;
-  register(
-    routes: (api: API, options?: RegisterOptions) => void,
-    options?: RegisterOptions
-  ): void;
-  routes(format: true): void;
-  routes(format: false): string[][];
-  routes(): string[][];
+  handle(handler: HandlerFunction): void;
 
-  use(path: string, ...middleware: Middleware[]): void;
-  use(paths: string[], ...middleware: Middleware[]): void;
-  use(...middleware: (Middleware | ErrorHandlingMiddleware)[]): void;
+  use(...middleware: Middleware[]): void;
+  use(...errorHandlingMiddleware: ErrorHandlingMiddleware[]): void;
 
   finally(callback: FinallyFunction): void;
 
-  run(
-    event: APIGatewayProxyEvent | APIGatewayProxyEventV2,
-    context: Context,
-    cb: (err: Error, result: any) => void
-  ): void;
-  run(
-    event: APIGatewayProxyEvent | APIGatewayProxyEventV2,
-    context: Context
-  ): Promise<any>;
+  run(event: APIGatewayEvent, context: Context): Promise<any>;
 }
 
 export declare class RouteError extends Error {
