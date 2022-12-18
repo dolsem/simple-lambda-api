@@ -122,6 +122,8 @@ export declare interface Options {
 }
 
 export declare class Request {
+  constructor(app: API);
+
   app: API;
   version: string;
   id: string;
@@ -178,6 +180,8 @@ export declare class Request {
 }
 
 export declare class Response {
+  constructor(app: API, request: Request);
+
   status(code: number): this;
   sendStatus(code: number): void;
   header(key: string, value?: string | Array<string>, append?: boolean): this;
