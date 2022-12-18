@@ -592,7 +592,7 @@ class RESPONSE {
   error(code, e, detail) {
     detail = typeof code !== 'number' && e !== undefined ? e : detail;
     e = typeof code !== 'number' ? code : e;
-    code = typeof code === 'number' ? code : undefined;
+    code = typeof code === 'number' ? code : e.statusCode;
     this.app.catchErrors(e, this, code, detail);
   } // end error
 } // end Response class

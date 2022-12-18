@@ -9,14 +9,31 @@ import type {
   Middleware,
   ErrorHandlingMiddleware,
 } from './types';
-import {
-  Request,
-  Response,
-  ConfigurationError,
-} from './lib';
 import * as logger from './lib/logger';
+import { Request, Response } from './lib';
+import { ConfigurationError } from './lib/errors';
 
-type ApiOptions = Omit<Options, 'base'>;
+export type {
+  Options,
+  Stack,
+  Middleware,
+  ErrorHandlingMiddleware,
+  HandlerFunction,
+  FinallyFunction,
+  CookieOptions,
+  CorsOptions,
+  FileOptions,
+  NextFunction,
+  LoggerFunction,
+  TimestampFunction,
+  SerializerFunction,
+  SamplingOptions,
+  LoggerOptions,
+} from './types';
+
+export { Request, Response } from './lib';
+export { ConfigurationError, ResponseError, FileError } from './lib/errors';
+export { ApiError } from './api-error';
 
 const LOG_LEVELS = {
   trace: 10,
@@ -32,12 +49,12 @@ class API<S extends Stack = []> {
   private _callbackName: string;
   private _version: string;
 
-  private _mimeTypes: ApiOptions['mimeTypes'];
-  private _serializer: ApiOptions['serializer'];
-  private _errorHeaderWhitelist: ApiOptions['errorHeaderWhitelist'];
-  private _isBase64: ApiOptions['isBase64'];
-  private _headers: ApiOptions['headers'];
-  private _compression: ApiOptions['compression'];
+  private _mimeTypes: Options['mimeTypes'];
+  private _serializer: Options['serializer'];
+  private _errorHeaderWhitelist: Options['errorHeaderWhitelist'];
+  private _isBase64: Options['isBase64'];
+  private _headers: Options['headers'];
+  private _compression: Options['compression'];
 
   // Set sampling info
   private _sampleCounts = {};
@@ -65,7 +82,7 @@ class API<S extends Stack = []> {
   private _event: APIGatewayEvent;
   private _context: Context;
 
-  constructor(props: ApiOptions) {
+  constructor(props: Options) {
     // Set the version and base paths
     this._version = props && props.version ? props.version : 'v1';
     this._callbackName =

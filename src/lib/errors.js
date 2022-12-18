@@ -8,23 +8,6 @@
 
 // Custom error types
 
-class RouteError extends Error {
-  constructor(message, path) {
-    super(message);
-    this.name = 'RouteError';
-    this.path = path;
-  }
-}
-
-class MethodError extends Error {
-  constructor(message, method, path) {
-    super(message);
-    this.name = 'MethodError';
-    this.method = method;
-    this.path = path;
-  }
-}
-
 class ConfigurationError extends Error {
   constructor(message) {
     super(message);
@@ -50,8 +33,6 @@ class FileError extends Error {
 
 // Export the response object
 module.exports = {
-  RouteError,
-  MethodError,
   ConfigurationError,
   ResponseError,
   FileError,

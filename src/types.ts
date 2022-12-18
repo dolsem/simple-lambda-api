@@ -4,7 +4,9 @@ import {
   APIGatewayProxyEventV2,
   Context,
 } from 'aws-lambda';
-import { A, U } from 'ts-toolbelt';
+import { U } from 'ts-toolbelt';
+
+import API from './index';
 
 export declare interface CookieOptions {
   domain?: string;
@@ -33,12 +35,6 @@ export declare interface FileOptions {
   cacheControl?: boolean | string;
   private?: boolean;
 }
-
-export declare interface RegisterOptions {
-  prefix?: string;
-}
-
-export type Package = any;
 
 export declare type Middleware<S extends Stack = []> = (
   req: Request<S>,
@@ -225,14 +221,6 @@ export declare class Response<S extends Stack = []> {
   ext: { [K in keyof (U.IntersectOf<S[number]['Res']>)]: U.IntersectOf<S[number]['Res']>[K]; }
 }
 
-export declare class RouteError extends Error {
-  constructor(message: string, path: string);
-}
-
-export declare class MethodError extends Error {
-  constructor(message: string, method: METHODS, path: string);
-}
-
 export declare class ConfigurationError extends Error {
   constructor(message: string);
 }
@@ -244,7 +232,3 @@ export declare class ResponseError extends Error {
 export declare class FileError extends Error {
   constructor(message: string, err: object);
 }
-
-declare function createAPI(options?: Options): API;
-
-export default createAPI;
