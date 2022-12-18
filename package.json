@@ -1,7 +1,7 @@
 {
   "name": "simple-lambda-api",
-  "version": "0.11.2",
-  "description": "Lightweight web framework for your serverless applications",
+  "version": "0.0.1",
+  "description": "Tiny web framework for single-route serverless functions, based on Lambda API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremydaly/lambda-api.git"
+    "url": "git+https://github.com/dolsem/simple-lambda-api.git"
   },
   "keywords": [
     "serverless",
@@ -31,12 +31,12 @@
     "schema",
     "open"
   ],
-  "author": "Jeremy Daly <jeremy@jeremydaly.com>",
+  "author": "Denis Olsem <dols3m@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jeremydaly/lambda-api/issues"
+    "url": "https://github.com/dolsem/simple-lambda-api/issues"
   },
-  "homepage": "https://github.com/jeremydaly/lambda-api#readme",
+  "homepage": "https://github.com/dolsem/simple-lambda-api#readme",
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
     "@types/aws-lambda": "^8.10.51",
