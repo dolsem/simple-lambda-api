@@ -1,10 +1,14 @@
 'use strict';
 
-// Init API instance
-const api = require('../index')({ version: 'v1.0' })
+const { API } = require('..');
 
-// NOTE: Set test to true
-api._test = true;
+// Init API instance
+const createApi = () => {
+  const api = new API({ version: 'v1.0' });
+  // NOTE: Set test to true
+  api._test = true;
+  return api;
+};
 
 let event = {
   httpMethod: 'get',
@@ -16,106 +20,6 @@ let event = {
 }
 
 /******************************************************************************/
-/***  DEFINE TEST ROUTES                                                    ***/
-/******************************************************************************/
-
-api.get('/cookie', function(req,res) {
-  res.cookie('test','value').send({})
-})
-
-api.get('/cookieMultiple', function(req,res) {
-  res.cookie('test','value').cookie('test2','value2').send({})
-})
-
-api.get('/cookieEncoded', function(req,res) {
-  res.cookie('test','http:// [] foo;bar').send({})
-})
-
-api.get('/cookieObject', function(req,res) {
-  res.cookie('test',{ foo: "bar" }).send({})
-})
-
-api.get('/cookieNonString', function(req,res) {
-  res.cookie(123,'value').send({})
-})
-
-api.get('/cookieExpire', function(req,res) {
-  res.cookie('test','value', { expires: new Date('January 1, 2019 00:00:00 GMT') }).send({})
-})
-
-api.get('/cookieMaxAge', function(req,res) {
-  res.cookie('test','value', { maxAge: 60*60*1000 }).send({})
-})
-
-api.get('/cookieDomain', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookieHttpOnly', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    httpOnly: true,
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookieSecure', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    secure: true,
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookiePath', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    secure: true,
-    path: '/test',
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookieSameSiteTrue', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    sameSite: true,
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookieSameSiteFalse', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    sameSite: false,
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookieSameSiteString', function(req,res) {
-  res.cookie('test','value', {
-    domain: 'test.com',
-    sameSite: 'Test',
-    expires: new Date('January 1, 2019 00:00:00 GMT')
-  }).send({})
-})
-
-api.get('/cookieParse', function(req,res) {
-  res.send({ cookies: req.cookies })
-})
-
-api.get('/cookieClear', function(req,res) {
-  res.clearCookie('test').send({})
-})
-
-api.get('/cookieClearOptions', function(req,res) {
-  res.clearCookie('test', { domain: 'test.com', httpOnly: true, secure: true }).send({})
-})
-
-/******************************************************************************/
 /***  BEGIN TESTS                                                           ***/
 /******************************************************************************/
 
@@ -123,8 +27,12 @@ describe('Cookie Tests:', function() {
 
   describe("Set", function() {
     it('Basic Session Cookie', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value').send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookie' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -134,8 +42,12 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Basic Session Cookie (multi-header)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value').cookie('test2','value2').send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieMultiple' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -145,8 +57,12 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Basic Session Cookie (encoded value)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','http:// [] foo;bar').send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieEncoded' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -157,8 +73,12 @@ describe('Cookie Tests:', function() {
 
 
     it('Basic Session Cookie (object value)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test',{ foo: "bar" }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieObject' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -169,8 +89,12 @@ describe('Cookie Tests:', function() {
 
 
     it('Basic Session Cookie (non-string name)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie(123,'value').send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieNonString' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -181,8 +105,12 @@ describe('Cookie Tests:', function() {
 
 
     it('Permanent Cookie (set expires)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', { expires: new Date('January 1, 2019 00:00:00 GMT') }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieExpire' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -192,8 +120,12 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set maxAge)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', { maxAge: 60*60*1000 }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieMaxAge' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -203,8 +135,15 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set domain)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieDomain' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -214,8 +153,16 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set httpOnly)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          httpOnly: true,
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieHttpOnly' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -225,8 +172,16 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set secure)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          secure: true,
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieSecure' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -236,8 +191,17 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set path)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          secure: true,
+          path: '/test',
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookiePath' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -247,8 +211,16 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set sameSite - true)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          sameSite: true,
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieSameSiteTrue' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -258,8 +230,16 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set sameSite - false)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          sameSite: false,
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieSameSiteFalse' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -269,8 +249,16 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set sameSite - string)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.cookie('test','value', {
+          domain: 'test.com',
+          sameSite: 'Test',
+          expires: new Date('January 1, 2019 00:00:00 GMT')
+        }).send({})
+      });
+
       let _event = Object.assign({},event,{ path: '/cookieSameSiteString' })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -283,6 +271,9 @@ describe('Cookie Tests:', function() {
 
 
   describe("Parse", function() {
+    const api = createApi().handler(function(req,res) {
+      res.send({ cookies: req.cookies })
+    });
 
     it('Parse single cookie', async function() {
       let _event = Object.assign({},event,{
@@ -291,7 +282,7 @@ describe('Cookie Tests:', function() {
           cookie: ["test=some%20value"]
         }
       })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -306,7 +297,7 @@ describe('Cookie Tests:', function() {
           cookie: ["test=some%20value; test2=%7B%22foo%22%3A%22bar%22%7D"]
         }
       })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -322,7 +313,7 @@ describe('Cookie Tests:', function() {
           cookie: ["test=some%20value; test2=%7B%22foo%22%3A%22bar%22%7D; test3=domain"]
         }
       })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -335,10 +326,14 @@ describe('Cookie Tests:', function() {
   describe("Clear", function() {
 
     it('Clear cookie (no options)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.clearCookie('test').send({})
+      });
+
       let _event = Object.assign({},event,{
         path: '/cookieClear'
       })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],
@@ -348,10 +343,14 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Clear cookie (w/ options)', async function() {
+      const api = createApi().handler(function(req,res) {
+        res.clearCookie('test', { domain: 'test.com', httpOnly: true, secure: true }).send({})
+      });
+
       let _event = Object.assign({},event,{
         path: '/cookieClearOptions'
       })
-      let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+      let result = await api.run(_event,{})
       expect(result).toEqual({
         multiValueHeaders: {
           'content-type': ['application/json'],

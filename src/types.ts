@@ -143,9 +143,9 @@ export declare class Request<S extends Stack = []> {
   };
   body: any;
   rawBody: string;
-  route: '';
   requestContext: APIGatewayEventRequestContext;
   isBase64Encoded: boolean;
+  pathParameters: { [name: string]: string } | null;
   stageVariables: { [name: string]: string } | null;
   auth: {
     [key: string]: any;
@@ -211,7 +211,7 @@ export declare class Response<S extends Stack = []> {
     fileName?: string,
     options?: FileOptions,
     callback?: ErrorCallback
-  ): void;
+  ): Promise<void>;
   sendFile(
     file: string | Buffer,
     options?: FileOptions,

@@ -4,9 +4,10 @@ const delay = ms => new Promise(res => setTimeout(res, ms))
 
 let request = 1
 
+const { API } = require('..');
+
 // Init API instance
-const api_default = require('../index')({ logger: { sampling: true } })
-const api_rules = require('../index')({
+const api_rules = new API({
   logger: {
     access: 'never',
     sampling: {
@@ -28,21 +29,6 @@ const api_rules = require('../index')({
     }
   }
 })
-const api_basePathRules = require('../index')({
-  logger: {
-    access: false,
-    sampling: {
-      rules: [
-        { route: '/',  target: 0, rate: 0, period: 5, method: 'get' },
-      ],
-      target: 1,
-      rate: 0.1,
-      period: 5
-    }
-  }
-})
-
-
 
 // Define default event
 let event = {
@@ -64,65 +50,23 @@ let context = {
   getRemainingTimeInMillis: () => 5000
 }
 
-
-/******************************************************************************/
-/***  DEFINE TEST ROUTES                                                    ***/
-/******************************************************************************/
-
-api_rules.get('/', (req,res) => {
-  req.log.trace('request #'+request++)
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testNone', (req,res) => {
-  req.log.trace('request #'+request++)
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testTarget', (req,res) => {
-  req.log.trace('request #'+request++)
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testTargetRate', (req,res) => {
-  req.log.trace('request #'+request++)
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testTargetMethod', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.post('/testTargetMethod', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testParam/:param', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testParam/:param/deep', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testWildCard/test', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testWildCard/other', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testWildCard/other/deep', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-api_rules.get('/testWildCardMethod/other', (req,res) => {
-  res.send({ method: req.method, rule: req._sampleRule })
-})
-
-
-
+api_rules.handler((req, res) => {
+  if (req.path === '/') {
+    req.log.trace('request #'+request++)
+    res.send({ method: req.method, rule: req._sampleRule })
+  } else if (req.path === '/testNone') {
+    req.log.trace('request #'+request++)
+    res.send('done')
+  } else if (req.path === '/testTarget') {
+    req.log.trace('request #'+request++)
+    res.send({ method: req.method, rule: req._sampleRule })
+  } else if (req.path === '/testTargetRate') {
+    req.log.trace('request #'+request++)
+    res.send({ method: req.method, rule: req._sampleRule })
+  } else {
+    res.send({ method: req.method, rule: req._sampleRule });
+  }
+});
 
 /******************************************************************************/
 /***  BEGIN TESTS                                                           ***/
@@ -134,7 +78,7 @@ describe('Sampling Tests:', function() {
     it('Invalid sampling config', async function() {
       let error_message
       try {
-        const api_error = require('../index')({ version: 'v1.0', logger: {
+        const api_error = new API({ version: 'v1.0', logger: {
           sampling: 'invalid'
         } })
       } catch(e) {
@@ -147,7 +91,7 @@ describe('Sampling Tests:', function() {
     it('Missing route in rules', async function() {
       let error_message
       try {
-        const api_error = require('../index')({ version: 'v1.0', logger: {
+        const api_error = new API({ version: 'v1.0', logger: {
           sampling: {
             rules: [
               { route: '/testNone',  target: 0, rate: 0, period: 5 },
@@ -165,7 +109,7 @@ describe('Sampling Tests:', function() {
     it('Invalid route in rules', async function() {
       let error_message
       try {
-        const api_error = require('../index')({ version: 'v1.0', logger: {
+        const api_error = new API({ version: 'v1.0', logger: {
           sampling: {
             rules: [
               { route: '/testNone',  target: 0, rate: 0, period: 5 },
@@ -185,7 +129,7 @@ describe('Sampling Tests:', function() {
 
     it('Match based on method (GET)', async function() {
       let _event = Object.assign({},event,{ path: '/testTargetMethod', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -197,7 +141,7 @@ describe('Sampling Tests:', function() {
 
     it('Match based on method (POST)', async function() {
       let _event = Object.assign({},event,{ httpMethod: 'post', path: '/testTargetMethod', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('POST')
@@ -208,8 +152,8 @@ describe('Sampling Tests:', function() {
     })
 
     it('Match parameterized path', async function() {
-      let _event = Object.assign({},event,{ path: '/testParam/foo', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let _event = Object.assign({},event,{ path: '/testParam/foo', queryStringParameters: { test: true }, pathParameters: { param: 'food' } })
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -221,7 +165,7 @@ describe('Sampling Tests:', function() {
 
     it('Match deep parameterized path', async function() {
       let _event = Object.assign({},event,{ path: '/testParam/foo/deep', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -233,7 +177,7 @@ describe('Sampling Tests:', function() {
 
     it('Match wildcard route', async function() {
       let _event = Object.assign({},event,{ path: '/testWildCard/other', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -245,7 +189,7 @@ describe('Sampling Tests:', function() {
 
     it('Match static route (w/ wildcard at the same level)', async function() {
       let _event = Object.assign({},event,{ path: '/testWildCard/test', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -257,7 +201,7 @@ describe('Sampling Tests:', function() {
 
     it('Match deep wildcard route', async function() {
       let _event = Object.assign({},event,{ path: '/testWildCard/other/deep', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -269,7 +213,7 @@ describe('Sampling Tests:', function() {
 
     it('Match wildcard route (by method)', async function() {
       let _event = Object.assign({},event,{ path: '/testWildCardMethod/other', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
@@ -322,7 +266,7 @@ describe('Sampling Tests:', function() {
       let start = Date.now()
 
       for(let x = 0; x<requests;x++) {
-        result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+        result = await api_rules.run(_event,context);
         await delay(20)
       } // end for loop
 
@@ -349,6 +293,7 @@ describe('Sampling Tests:', function() {
       _log = [] // clear log
       request = 1 // reset requests
       api_rules._initTime = Date.now() // reset _initTime for the API
+      api_rules._sampleCounts = null;
 
       // Set the number of simulated requests
       let requests = 100
@@ -360,7 +305,7 @@ describe('Sampling Tests:', function() {
       let start = Date.now()
 
       for(let x = 0; x<requests;x++) {
-        result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+        result = await api_rules.run(_event,context);
         await delay(20)
       } // end for loop
 
@@ -388,6 +333,7 @@ describe('Sampling Tests:', function() {
       _log = [] // clear log
       request = 1 // reset requests
       api_rules._initTime = Date.now() // reset _initTime for the API
+      api_rules._sampleCounts = null;
 
       // Set the number of simulated requests
       let requests = 100
@@ -399,7 +345,7 @@ describe('Sampling Tests:', function() {
       let start = Date.now()
 
       for(let x = 0; x<requests;x++) {
-        result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+        result = await api_rules.run(_event,context);
         await delay(20)
         // await Promise.delay(20)
       } // end for loop

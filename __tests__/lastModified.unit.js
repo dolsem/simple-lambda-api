@@ -1,11 +1,15 @@
 'use strict';
 
+const { API } = require('..');
+
 // Init API instance
-const api = require('../index')({ version: 'v1.0' })
+const createApi = () => {
+  const api = new API({ version: 'v1.0' });
+  // NOTE: Set test to true
+  api._test = true;
 
-
-// NOTE: Set test to true
-api._test = true;
+  return api;
+};
 
 let event = {
   httpMethod: 'get',
@@ -16,35 +20,6 @@ let event = {
   }
 }
 
-
-/******************************************************************************/
-/***  DEFINE TEST ROUTES                                                    ***/
-/******************************************************************************/
-
-api.get('/modified', function(req,res) {
-  res.modified().send('cache')
-})
-
-api.get('/modifiedTrue', function(req,res) {
-  res.modified(true).send('cache')
-})
-
-api.get('/modifiedFalse', function(req,res) {
-  res.modified(false).send('cache')
-})
-
-api.get('/modifiedDate', function(req,res) {
-  res.modified(new Date('2018-08-01')).send('cache')
-})
-
-api.get('/modifiedString', function(req,res) {
-  res.modified('2018-08-01').send('cache')
-})
-
-api.get('/modifiedBadString', function(req,res) {
-  res.modified('test').send('cache')
-})
-
 /******************************************************************************/
 /***  BEGIN TESTS                                                           ***/
 /******************************************************************************/
@@ -52,8 +27,12 @@ api.get('/modifiedBadString', function(req,res) {
 describe('modified Tests:', function() {
 
   it('modified (no options)', async function() {
+    const api = createApi().handler(function(req,res) {
+      res.modified().send('cache')
+    });
+
     let _event = Object.assign({},event,{ path: '/modified' })
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({
       multiValueHeaders: {
         'content-type': ['application/json'],
@@ -68,8 +47,12 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (true)', async function() {
+    const api = createApi().handler(function(req,res) {
+      res.modified(true).send('cache')
+    });
+
     let _event = Object.assign({},event,{ path: '/modifiedTrue' })
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({
       multiValueHeaders: {
         'content-type': ['application/json'],
@@ -84,8 +67,12 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (false)', async function() {
+    const api = createApi().handler(function(req,res) {
+      res.modified(false).send('cache')
+    });
+
     let _event = Object.assign({},event,{ path: '/modifiedFalse' })
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({
       multiValueHeaders: {
         'content-type': ['application/json']
@@ -97,8 +84,12 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (date)', async function() {
+    const api = createApi().handler(function(req,res) {
+      res.modified(new Date('2018-08-01')).send('cache')
+    });
+
     let _event = Object.assign({},event,{ path: '/modifiedDate' })
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({
       multiValueHeaders: {
         'content-type': ['application/json'],
@@ -111,8 +102,12 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (string)', async function() {
+    const api = createApi().handler(function(req,res) {
+      res.modified('2018-08-01').send('cache')
+    });
+
     let _event = Object.assign({},event,{ path: '/modifiedString' })
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({
       multiValueHeaders: {
         'content-type': ['application/json'],
@@ -126,8 +121,12 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (invalid date)', async function() {
+    const api = createApi().handler(function(req,res) {
+      res.modified('test').send('cache')
+    });
+
     let _event = Object.assign({},event,{ path: '/modifiedBadString' })
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({
       multiValueHeaders: {
         'content-type': ['application/json'],

@@ -155,7 +155,6 @@ exports.config = (config, levels) => {
         level,
         time: timestamp(),
         id: req.id,
-        route: req.route,
         method: req.method,
         [messageKey]: msg,
         timer: timer(req._start),
@@ -205,7 +204,7 @@ exports.sampler = (app, req) => {
     let map = app._logger.sampling.rulesMap;
 
     // Parse the current route
-    let route = UTILS.parsePath(req.route);
+    let route = UTILS.parsePath(req.path);
 
     // Default wildcard mapping
     let wildcard = {};
@@ -215,7 +214,12 @@ exports.sampler = (app, req) => {
       // Capture wildcard mappings
       if (map['*']) wildcard = map['*'];
       // Traverse map
-      map = map[part] ? map[part] : {};
+      if (map[part]) {
+        map = map[part];
+      } else {
+        const param = Object.keys(map).find((key) => key.startsWith(':'));
+        map = param ? map[param] : {};
+      }
     }); // end for loop
 
     // Set rule reference based on route
@@ -238,16 +242,13 @@ exports.sampler = (app, req) => {
     req._sampleRule = rule;
 
     // Get last sample time (default start, last, fixed count, period count and total count)
-    let counts =
-      app._sampleCounts[rule.default ? 'default' : req.route] ||
-      Object.assign(app._sampleCounts, {
-        [rule.default ? 'default' : req.route]: {
-          start: 0,
-          fCount: 0,
-          pCount: 0,
-          tCount: 0,
-        },
-      })[rule.default ? 'default' : req.route];
+    app._sampleCounts ||= {
+      start: 0,
+      fCount: 0,
+      pCount: 0,
+      tCount: 0,
+    };
+    let counts = app._sampleCounts
 
     let now = Date.now();
 

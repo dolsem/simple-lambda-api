@@ -2,16 +2,14 @@
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
+const { API } = require('..');
+
 // Init API instance
-const api = require("../index")({ version: "v1.0" });
-const api2 = require("../index")({ version: "v1.0" });
-const api3 = require("../index")({ version: "v1.0" });
-const api4 = require("../index")({ version: "v1.0" });
-const api5 = require("../index")({ version: "v1.0" });
-const api6 = require("../index")({ version: "v1.0" });
-const api7 = require("../index")({ version: "v1.0" });
-const api8 = require("../index")({ version: "v1.0" });
-const api9 = require("../index")({ version: "v1.0" });
+const api = new API({ version: "v1.0" });
+const api2 = new API({ version: "v1.0" });
+const api3 = new API({ version: "v1.0" });
+const api4 = new API({ version: "v1.0" });
+const api5 = new API({ version: "v1.0" });
 
 let event = {
   httpMethod: "get",
@@ -42,10 +40,9 @@ api.use(function (req, res, next) {
 
 // Add middleware with promise/delay
 api.use(function (req, res, next) {
-  if (req.route === "/testPromise") {
+  if (req.path === "/testPromise") {
     let start = Date.now();
     delay(100).then((x) => {
-      // console.log('Time:',Date.now()-start);
       req.testMiddlewarePromise = "test";
       next();
     });
@@ -54,45 +51,14 @@ api.use(function (req, res, next) {
   }
 });
 
-api2.use("/test", function testMiddlware(req, res, next) {
-  req.testMiddleware = true;
-  next();
-});
-
-api2.use("/test/*", function testMiddlewareWildcard(req, res, next) {
-  req.testMiddlewareWildcard = true;
-  next();
-});
-
-api2.use("/test/test2/*", function testMiddlewareWildcard2(req, res, next) {
-  req.testMiddlewareWildcard2 = true;
-  next();
-});
-
-api2.use("/test/:param1", function testMiddlewareParam(req, res, next) {
-  req.testMiddlewareParam = true;
-  next();
-});
-
-// This test is deprecated
-// api2.use('/test/testing',function testMiddlewarePath(req,res,next) {
-//   req.testMiddlewarePath = true
-//   next()
-// })
-
-api2.use("/test/error", function testMiddlwareError(req, res, next) {
-  // console.log('API2 ERROR MIDDLEWARE');
-  res.error(401, "Not Authorized");
-});
-
-api3.use(
-  ["/test", "/test/:param1", "/test2/*"],
-  function arrayBasedMiddleware(req, res, next) {
-    // console.log('API3 MIDDLEWARE:',req.path);
-    req.testMiddlewareAll = true;
+api2.use(function (req, res, next) {
+  if (req.path === "/test/error") {
+    res.error(401, "Not Authorized");
+  } else {
+    if (req.path === '/test') req.testMiddleware = true;
     next();
   }
-);
+});
 
 const middleware1 = (req, res, next) => {
   req.middleware1 = true;
@@ -104,138 +70,68 @@ const middleware2 = (req, res, next) => {
   next();
 };
 
-const middleware3 = (req, res, next) => {
-  req.middleware3 = true;
-  next();
-};
+api3.use(middleware1, middleware2);
 
-api4.use(middleware1, middleware2);
-api5.use("/test/x", middleware1, middleware2);
-api5.use("/test/y", middleware1);
-
-api6.use((req, res, next) => {
+api4.use((req, res, next) => {
   res.header("middleware1", true);
   return "return from middleware";
 });
 
 // This shouldn't run
-api6.use((req, res, next) => {
+api4.use((req, res, next) => {
   res.header("middleware2", true);
   next();
 });
 
-api7.use((req, res, next) => {
+api5.use((req, res, next) => {
   res.header("middleware1", true);
   res.send("return from middleware");
   next();
 });
 
 // This shouldn't run
-api7.use((req, res, next) => {
+api5.use((req, res, next) => {
   res.header("middleware2", true);
   next();
 });
-
-api9.use(middleware1);
-api9.use(["/data/*"], middleware2);
-api9.use(middleware3);
 
 /******************************************************************************/
 /***  DEFINE TEST ROUTES                                                    ***/
 /******************************************************************************/
 
-api.get("/test", function (req, res) {
-  res.status(200).json({
-    method: "get",
-    testMiddleware: req.testMiddleware,
-    testMiddleware2: req.testMiddleware2,
-  });
+api.handler((req, res) => {
+  if (req.path === '/test') {
+    res.status(200).json({
+      method: "get",
+      testMiddleware: req.testMiddleware,
+      testMiddleware2: req.testMiddleware2,
+    });
+  } else if (req.path.startsWith('/test/')) {
+    res.status(200).json({
+      method: "get",
+      testMiddleware3: req.testMiddleware3,
+      testMiddleware4: req.testMiddleware4,
+      testMiddleware5: req.testMiddleware5,
+    });
+  } else if (req.path === '/testPromise') {
+    res
+      .status(200)
+      .json({ method: "get", testMiddlewarePromise: req.testMiddlewarePromise });
+  }
 });
 
-api.post("/test/:test", function (req, res) {
-  res.status(200).json({
-    method: "get",
-    testMiddleware3: req.testMiddleware3,
-    testMiddleware4: req.testMiddleware4,
-    testMiddleware5: req.testMiddleware5,
-  });
+api2.handler((req, res) => {
+  if (req.path === '/test/error') {
+    res.status(200).json({ message: "should not get here" });
+  } else {
+    res.status(200).json({
+      method: "get",
+      middleware: req.testMiddleware ? true : false,
+    });
+  }
 });
 
-api.get("/testPromise", function (req, res) {
-  res
-    .status(200)
-    .json({ method: "get", testMiddlewarePromise: req.testMiddlewarePromise });
-});
-
-api2.get("/test", function (req, res) {
-  res.status(200).json({
-    method: "get",
-    middleware: req.testMiddleware ? true : false,
-    middlewareWildcard: req.testMiddlewareWildcard ? true : false,
-    middlewareParam: req.testMiddlewareParam ? true : false,
-    middlewarePath: req.testMiddlewarePath ? true : false,
-  });
-});
-
-api2.get("/test2/:test", function (req, res) {
-  res.status(200).json({
-    method: "get",
-    middleware: req.testMiddleware ? true : false,
-    middlewareWildcard: req.testMiddlewareWildcard ? true : false,
-    middlewareParam: req.testMiddlewareParam ? true : false,
-    middlewarePath: req.testMiddlewarePath ? true : false,
-  });
-});
-
-api2.get("/test/xyz", function testXYZ(req, res) {
-  res.status(200).json({
-    method: "get",
-    middleware: req.testMiddleware ? true : false,
-    middlewareWildcard: req.testMiddlewareWildcard ? true : false,
-    middlewareParam: req.testMiddlewareParam ? true : false,
-    middlewarePath: req.testMiddlewarePath ? true : false,
-  });
-});
-
-api2.get("/test/:param1", function (req, res) {
-  res.status(200).json({
-    method: "get",
-    middleware: req.testMiddleware ? true : false,
-    middlewareWildcard: req.testMiddlewareWildcard ? true : false,
-    middlewareParam: req.testMiddlewareParam ? true : false,
-    middlewarePath: req.testMiddlewarePath ? true : false,
-  });
-});
-
-api2.get("/test/error", function (req, res) {
-  res.status(200).json({ message: "should not get here" });
-});
-
-api3.get("/test", function (req, res) {
-  res
-    .status(200)
-    .json({ method: "get", middleware: req.testMiddlewareAll ? true : false });
-});
-
-api3.get("/test/:param1", function (req, res) {
-  res
-    .status(200)
-    .json({ method: "get", middleware: req.testMiddlewareAll ? true : false });
-});
-
-api3.get("/test2/test", function (req, res) {
-  res
-    .status(200)
-    .json({ method: "get", middleware: req.testMiddlewareAll ? true : false });
-});
-
-api3.get("/test3", function (req, res) {
-  res
-    .status(200)
-    .json({ method: "get", middleware: req.testMiddlewareAll ? true : false });
-});
-
-api4.get("/test", (req, res) => {
+api3.handler((req, res) => {
   res.status(200).json({
     method: "get",
     middleware1: req.middleware1 ? true : false,
@@ -243,81 +139,14 @@ api4.get("/test", (req, res) => {
   });
 });
 
-api5.get("/test", (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-  });
-});
-
-api5.get("/test/x", (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-  });
-});
-
-api5.get("/test/y", (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-  });
-});
-
-api6.get("/test", (req, res) => {
+api4.handler((req, res) => {
   // This should not run because of the middleware return
   res.status(200).send("route response");
 });
 
-api7.get("/test", (req, res) => {
+api5.handler((req, res) => {
   // This should not run because of the middleware return
   res.status(200).send("route response");
-});
-
-api8.get("/test/one", middleware1, (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-  });
-});
-
-api8.get("/test/two", middleware1, middleware2, (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-  });
-});
-
-api9.get("/test", (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-    middleware3: req.middleware3 ? true : false,
-  });
-});
-
-api9.get("/data", (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-    middleware3: req.middleware3 ? true : false,
-  });
-});
-
-api9.get("/data/test", (req, res) => {
-  res.status(200).json({
-    method: "get",
-    middleware1: req.middleware1 ? true : false,
-    middleware2: req.middleware2 ? true : false,
-    middleware3: req.middleware3 ? true : false,
-  });
 });
 
 /******************************************************************************/
@@ -329,11 +158,7 @@ describe("Middleware Tests:", function () {
 
   it("Set Values in res object", async function () {
     let _event = Object.assign({}, event, {});
-    let result = await new Promise((r) =>
-      api.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 200,
@@ -346,14 +171,11 @@ describe("Middleware Tests:", function () {
     let _event = Object.assign({}, event, {
       httpMethod: "post",
       path: "/test/123",
+      pathParameters: { test: '123' },
       queryStringParameters: { test: "456" },
       body: { test: "789" },
     });
-    let result = await new Promise((r) =>
-      api.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 200,
@@ -364,11 +186,7 @@ describe("Middleware Tests:", function () {
 
   it("Middleware with Promise/Delay", async function () {
     let _event = Object.assign({}, event, { path: "/testPromise" });
-    let result = await new Promise((r) =>
-      api.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 200,
@@ -379,123 +197,18 @@ describe("Middleware Tests:", function () {
 
   it("With matching string path", async function () {
     let _event = Object.assign({}, event, { path: "/test" });
-    let result = await new Promise((r) =>
-      api2.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api2.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 200,
-      body: '{"method":"get","middleware":true,"middlewareWildcard":false,"middlewareParam":false,"middlewarePath":false}',
+      body: '{"method":"get","middleware":true}',
       isBase64Encoded: false,
     });
   }); // end it
 
   it("With non-matching string path", async function () {
     let _event = Object.assign({}, event, { path: "/test2/xyz" });
-    let result = await new Promise((r) =>
-      api2.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware":false,"middlewareWildcard":false,"middlewareParam":false,"middlewarePath":false}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Wildcard match", async function () {
-    let _event = Object.assign({}, event, { path: "/test/xyz" });
-    let result = await new Promise((r) =>
-      api2.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware":false,"middlewareWildcard":true,"middlewareParam":false,"middlewarePath":false}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  // it('Parameter match', async function() {
-  //   let _event = Object.assign({},event,{ path: '/test/testing' })
-  //   let result = await new Promise(r => api2.run(_event,{},(e,res) => { r(res) }))
-  //   console.log(JSON.stringify(api2._routes,null,2));
-  //   expect(result).toEqual({ multiValueHeaders: { 'content-type': ['application/json'] }, statusCode: 200, body: '{"method":"get","middleware":false,"middlewareWildcard":true,"middlewareParam":true,"middlewarePath":true}', isBase64Encoded: false })
-  // }) // end it
-
-  it("Parameter match", async function () {
-    let _event = Object.assign({}, event, { path: "/test/testing" });
-    let result = await new Promise((r) =>
-      api2.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware":false,"middlewareWildcard":true,"middlewareParam":true,"middlewarePath":false}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Matching path (array)", async function () {
-    let _event = Object.assign({}, event, { path: "/test" });
-    let result = await new Promise((r) =>
-      api3.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Matching param (array)", async function () {
-    let _event = Object.assign({}, event, { path: "/test/xyz" });
-    let result = await new Promise((r) =>
-      api3.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Matching wildcard (array)", async function () {
-    let _event = Object.assign({}, event, { path: "/test2/test" });
-    let result = await new Promise((r) =>
-      api3.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Non-matching path (array)", async function () {
-    let _event = Object.assign({}, event, { path: "/test3" });
-    let result = await new Promise((r) =>
-      api3.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api2.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 200,
@@ -504,73 +217,20 @@ describe("Middleware Tests:", function () {
     });
   }); // end it
 
-  it("Multiple middlewares (no path)", async function () {
+  it("Multiple middlewares", async function () {
     let _event = Object.assign({}, event, { path: "/test" });
-    let result = await new Promise((r) =>
-      api4.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api3.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 200,
       body: '{"method":"get","middleware1":true,"middleware2":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Multiple middlewares (w/o matching path)", async function () {
-    let _event = Object.assign({}, event, { path: "/test" });
-    let result = await new Promise((r) =>
-      api5.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":false,"middleware2":false}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Multiple middlewares (w/ matching path)", async function () {
-    let _event = Object.assign({}, event, { path: "/test/x" });
-    let result = await new Promise((r) =>
-      api5.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Single middleware (w/ matching path)", async function () {
-    let _event = Object.assign({}, event, { path: "/test/y" });
-    let result = await new Promise((r) =>
-      api5.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":false}',
       isBase64Encoded: false,
     });
   }); // end it
 
   it("Short-circuit route with middleware (async return)", async function () {
     let _event = Object.assign({}, event, { path: "/test" });
-    let result = await new Promise((r) =>
-      api6.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api4.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: {
         "content-type": ["application/json"],
@@ -584,11 +244,7 @@ describe("Middleware Tests:", function () {
 
   it("Short-circuit route with middleware (callback)", async function () {
     let _event = Object.assign({}, event, { path: "/test" });
-    let result = await new Promise((r) =>
-      api7.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api5.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: {
         "content-type": ["application/json"],
@@ -602,11 +258,7 @@ describe("Middleware Tests:", function () {
 
   it("Trigger error in middleware", async function () {
     let _event = Object.assign({}, event, { path: "/test/error" });
-    let result = await new Promise((r) =>
-      api2.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
+    let result = await api2.run(_event, {});
     expect(result).toEqual({
       multiValueHeaders: { "content-type": ["application/json"] },
       statusCode: 401,
@@ -614,87 +266,4 @@ describe("Middleware Tests:", function () {
       isBase64Encoded: false,
     });
   }); // end it
-
-  it("Route-based middleware (single)", async function () {
-    let _event = Object.assign({}, event, { path: "/test/one" });
-    let result = await new Promise((r) =>
-      api8.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":false}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Route-based middleware (two middlewares)", async function () {
-    let _event = Object.assign({}, event, { path: "/test/two" });
-    let result = await new Promise((r) =>
-      api8.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Wildcard match - issue #112", async function () {
-    let _event = Object.assign({}, event, { path: "/test/" });
-    let result = await new Promise((r) =>
-      api9.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":false,"middleware3":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it("Wildcard match - issue #112", async function () {
-    let _event = Object.assign({}, event, { path: "/data" });
-    let result = await new Promise((r) =>
-      api9.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":false,"middleware3":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  it.skip("Wildcard match - issue #112", async function () {
-    let _event = Object.assign({}, event, { path: "/data/test" });
-    let result = await new Promise((r) =>
-      api9.run(_event, {}, (e, res) => {
-        r(res);
-      })
-    );
-    console.log(api9.routes());
-    console.log(result);
-    expect(result).toEqual({
-      multiValueHeaders: { "content-type": ["application/json"] },
-      statusCode: 200,
-      body: '{"method":"get","middleware1":true,"middleware2":true,"middleware3":true}',
-      isBase64Encoded: false,
-    });
-  }); // end it
-
-  // api8.get('/test/error', (req,res) => {}, (req,res) => {
-  //   res.status(200).json({
-  //     method: 'get'
-  //   })
-  // })
 }); // end MIDDLEWARE tests

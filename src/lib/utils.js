@@ -116,27 +116,6 @@ exports.statusLookup = (status) => {
   return status in statusCodes ? statusCodes[status] : 'Unknown';
 };
 
-// Parses routes into readable array
-const extractRoutes = (routes, table = []) => {
-  // Loop through all routes
-  for (let route in routes['ROUTES']) {
-    // Add methods
-    for (let method in routes['ROUTES'][route]['METHODS']) {
-      table.push([
-        method,
-        routes['ROUTES'][route]['METHODS'][method].path,
-        routes['ROUTES'][route]['METHODS'][method].stack.map((x) =>
-          x.name.trim() !== '' ? x.name : 'unnamed'
-        ),
-      ]);
-    }
-    extractRoutes(routes['ROUTES'][route], table);
-  }
-  return table;
-};
-
-exports.extractRoutes = extractRoutes;
-
 // Generate an Etag for the supplied value
 exports.generateEtag = (data) =>
   crypto

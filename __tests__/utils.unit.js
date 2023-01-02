@@ -1,6 +1,6 @@
 "use strict";
 
-const utils = require("../lib/utils");
+const utils = require("../dist/lib/utils");
 
 /******************************************************************************/
 /***  BEGIN TESTS                                                           ***/
@@ -230,73 +230,6 @@ describe("Utility Function Tests:", function () {
       expect(utils.statusLookup("foo")).toBe("Unknown");
     }); // end it
   }); // end encodeBody tests
-
-  describe("extractRoutes:", function () {
-    it("Sample routes", function () {
-      // Create an api instance
-      let api = require("../index")();
-      api.get("/", (req, res) => {});
-      api.post("/test", (req, res) => {});
-      api.put("/test/put", (req, res) => {});
-      api.delete("/test/:var/delete", (req, res) => {});
-
-      expect(utils.extractRoutes(api._routes)).toEqual([
-        ["GET", "/", ["unnamed"]],
-        ["POST", "/test", ["unnamed"]],
-        ["PUT", "/test/put", ["unnamed"]],
-        ["DELETE", "/test/:var/delete", ["unnamed"]],
-      ]);
-    }); // end it
-
-    it("No routes", function () {
-      // Create an api instance
-      let api = require("../index")();
-
-      expect(utils.extractRoutes(api._routes)).toEqual([]);
-    }); // end it
-
-    it("Prefixed routes", function () {
-      // Create an api instance
-      let api = require("../index")();
-
-      api.register(
-        (apix, opts) => {
-          apix.get("/", (req, res) => {});
-          apix.post("/test", (req, res) => {});
-        },
-        { prefix: "/v1" }
-      );
-      api.get("/", (req, res) => {});
-      api.post("/test", (req, res) => {});
-      api.put("/test/put", (req, res) => {});
-      api.delete("/test/:var/delete", (req, res) => {});
-
-      expect(utils.extractRoutes(api._routes)).toEqual([
-        ["GET", "/v1", ["unnamed"]],
-        ["POST", "/v1/test", ["unnamed"]],
-        ["GET", "/", ["unnamed"]],
-        ["POST", "/test", ["unnamed"]],
-        ["PUT", "/test/put", ["unnamed"]],
-        ["DELETE", "/test/:var/delete", ["unnamed"]],
-      ]);
-    }); // end it
-
-    it("Base routes", function () {
-      // Create an api instance
-      let api = require("../index")({ base: "v2" });
-      api.get("/", (req, res) => {});
-      api.post("/test", (req, res) => {});
-      api.put("/test/put", (req, res) => {});
-      api.delete("/test/:var/delete", (req, res) => {});
-
-      expect(utils.extractRoutes(api._routes)).toEqual([
-        ["GET", "/v2", ["unnamed"]],
-        ["POST", "/v2/test", ["unnamed"]],
-        ["PUT", "/v2/test/put", ["unnamed"]],
-        ["DELETE", "/v2/test/:var/delete", ["unnamed"]],
-      ]);
-    }); // end it
-  }); // end extractRoutes
 
   describe("generateEtag:", function () {
     it("Sample text", function () {

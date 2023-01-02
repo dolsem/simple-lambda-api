@@ -1,7 +1,9 @@
 'use strict';
 
+const { API } = require('..');
+
 // Init API instance
-const api = require('../index')({ version: 'v1.0' })
+const api = new API({ version: 'v1.0' });
 
 // Simulate database module
 const fakeDatabase = { connected: true }
@@ -18,10 +20,7 @@ let event = {
   }
 }
 
-/******************************************************************************/
-/***  DEFINE TEST ROUTE                                                     ***/
-/******************************************************************************/
-api.get('/test', function(req,res) {
+api.handler(function(req,res) {
   res.status(200).json({
     method: 'get',
     status: 'ok',
@@ -44,13 +43,13 @@ describe('Finally Tests:', function() {
 
   it('Connected on first execution and after callback', async function() {
     let _event = Object.assign({},event,{})
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({ multiValueHeaders: { 'content-type': ['application/json'] }, statusCode: 200, body: '{"method":"get","status":"ok","connected":"true"}', isBase64Encoded: false })
   }) // end it
 
   it('Disconnected on second execution', async function() {
     let _event = Object.assign({},event,{})
-    let result = await new Promise(r => api.run(_event,{},(e,res) => { r(res) }))
+    let result = await api.run(_event,{})
     expect(result).toEqual({ multiValueHeaders: { 'content-type': ['application/json'] }, statusCode: 200, body: '{"method":"get","status":"ok","connected":"false"}', isBase64Encoded: false })
   }) // end it
 

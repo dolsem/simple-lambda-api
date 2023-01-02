@@ -44,8 +44,9 @@ const LOG_LEVELS = {
   fatal: 60,
 };
 
-class API<S extends Stack = []> {
+export class API<S extends Stack = []> {
   private _logger: ReturnType<typeof logger.config>;
+  private _logLevels = { ...LOG_LEVELS };
   private _callbackName: string;
   private _version: string;
 
@@ -57,7 +58,7 @@ class API<S extends Stack = []> {
   private _compression: Options['compression'];
 
   // Set sampling info
-  private _sampleCounts = {};
+  private _sampleCounts = null;
 
   // Init request counter
   private _requestCount = 0;
@@ -113,11 +114,11 @@ class API<S extends Stack = []> {
         : false;
 
     // Configure logger
-    this._logger = logger.config(props && props.logger, LOG_LEVELS);
+    this._logger = logger.config(props && props.logger, this._logLevels);
 
   } // end constructor
 
-  handle(handler: HandlerFunction<S>) {
+  handler(handler: HandlerFunction<S>) {
     if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
       this._stack[this._stack.length - 1] = handler;
     } else {
@@ -158,6 +159,7 @@ class API<S extends Stack = []> {
               r();
             });
             if (rtn) response.send(rtn);
+            await response._promise;
             if ((response as any)._state === 'done') r(); // if state is done, resolve promise
           } catch (e) {
             await this.catchErrors(e, response);
@@ -248,12 +250,12 @@ class API<S extends Stack = []> {
     if (e instanceof Error) {
       message = e.message;
       if (this._logger.errorLogging) {
-        this._logger.fatal(message, info);
+        (this as any).log.fatal(message, info);
       }
     } else {
       message = e;
       if (this._logger.errorLogging) {
-        this._logger.error(message, info);
+        (this as any).log.error(message, info);
       }
     }
 

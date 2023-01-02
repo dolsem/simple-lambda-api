@@ -176,7 +176,7 @@ class REQUEST {
     this.interface = this.requestContext.elb ? 'alb' : 'apigateway';
 
     // Set the pathParameters
-    this.params = this.app._event.pathParameters || {};
+    this.params = this.pathParameters = this.app._event.pathParameters || {};
 
     // Set the stageVariables
     this.stageVariables = this.app._event.stageVariables || {};
@@ -186,8 +186,8 @@ class REQUEST {
 
     // Add context
     this.context =
-      this.app.context && typeof this.app.context === 'object'
-        ? this.app.context
+      this.app._context && typeof this.app._context === 'object'
+        ? this.app._context
         : {};
 
     // Parse id from context

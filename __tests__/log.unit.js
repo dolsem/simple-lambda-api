@@ -1,31 +1,107 @@
 'use strict'
 
+const { API } = require('..');
+
 // Init API instance
-const api_default = require('../index')({ logger: true }) // default logger
-const api_multi = require('../index')({ logger: { multiValue: true } })
-const api_customLevel = require('../index')({ version: 'v1.0', logger: { level: 'debug' } })
-const api_disableLevel = require('../index')({ version: 'v1.0', logger: { level: 'none' } })
-const api_customMsgKey = require('../index')({ version: 'v1.0', logger: { messageKey: 'customKey' } })
-const api_customCustomKey = require('../index')({ version: 'v1.0', logger: { customKey: 'customKey' } })
-const api_noTimer = require('../index')({ version: 'v1.0', logger: { timer: false } })
-const api_noTimestamp = require('../index')({ version: 'v1.0', logger: { timestamp: false } })
-const api_customTimestamp = require('../index')({ version: 'v1.0', logger: { timestamp: () => new Date().toUTCString() } })
-const api_accessLogs = require('../index')({ version: 'v1.0', logger: { access: true } })
-const api_noAccessLogs = require('../index')({ version: 'v1.0', logger: { access: 'never' } })
-const api_nested = require('../index')({ version: 'v1.0', logger: { nested: true, access: true } })
-const api_withDetail = require('../index')({ version: 'v1.0', logger: { detail: true } })
-const api_showStackTrace = require('../index')({ version: 'v1.0', logger: { stack: true } })
-const api_customLogger = require('../index')({ version: 'v1.0', logger: {
+const api_default = new API({ logger: true }).handler((req,res) => {
+  req.log.trace('trace message')
+  req.log.debug('debug message')
+  req.log.info('info message')
+  req.log.warn('warn message')
+  req.log.error('error message')
+  req.log.fatal('fatal message')
+  res.send('done')
+})
+const api_default_test = new API({ logger: true }).handler((req,res) => {
+  res.send('done')
+})
+const api_default_array = new API({ logger: true }).handler((req,res) => {
+  req.log.info('info message',['val1','val2','val3'])
+  res.send('done')
+})
+const api_multi = new API({ logger: { multiValue: true } }).handler((req,res) => {
+  req.log.trace('trace message')
+  req.log.debug('debug message')
+  req.log.info('info message')
+  req.log.warn('warn message')
+  req.log.error('error message')
+  req.log.fatal('fatal message')
+  res.send('done')
+})
+const api_customLevel = new API({ version: 'v1.0', logger: { level: 'debug' } }).handler((req,res) => {
+  req.log.trace('trace message')
+  req.log.debug('debug message')
+  req.log.info('info message')
+  req.log.warn('warn message')
+  req.log.error('error message')
+  req.log.fatal('fatal message')
+  res.send('done')
+})
+const api_disableLevel = new API({ version: 'v1.0', logger: { level: 'none' } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_customMsgKey = new API({ version: 'v1.0', logger: { messageKey: 'customKey' } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_customCustomKey = new API({ version: 'v1.0', logger: { customKey: 'customKey' } }).handler((req,res) => {
+  req.log.info('info message','custom messsage')
+  res.send('done')
+})
+const api_noTimer = new API({ version: 'v1.0', logger: { timer: false } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_noTimestamp = new API({ version: 'v1.0', logger: { timestamp: false } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_customTimestamp = new API({ version: 'v1.0', logger: { timestamp: () => new Date().toUTCString() } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_accessLogs = new API({ version: 'v1.0', logger: { access: true } }).handler((req,res) => {
+  res.send('done')
+})
+const api_accessLogs_test = new API({ version: 'v1.0', logger: { access: true } }).handler((req,res) => {
+  res.send('done')
+})
+const api_noAccessLogs = new API({ version: 'v1.0', logger: { access: 'never' } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_nested = new API({ version: 'v1.0', logger: { nested: true, access: true } }).handler((req,res) => {
+  req.log.info('info message',{ customMsg: 'custom message' })
+  res.send('done')
+})
+const api_withDetail = new API({ version: 'v1.0', logger: { detail: true } }).handler((req,res) => {
+  req.log.info('info message')
+  res.send('done')
+})
+const api_showStackTrace = new API({ version: 'v1.0', logger: { stack: true } }).handler((req,res) => {
+  undefinedVar // this should throw an error
+  res.send('done')
+})
+const api_customLogger = new API({ version: 'v1.0', logger: {
   log: (x) => console.log(JSON.stringify(Object.assign(JSON.parse(x),{ LOGGER: true })))
-} })
-const api_customLevels = require('../index')({ version: 'v1.0', logger: {
+} }).handler((req,res) => {
+  req.log.info('info message','second param')
+  res.send('done')
+})
+const api_customLevels = new API({ version: 'v1.0', logger: {
   levels: {
     testDebug: 35,
     testInfo: 30,
     trace: 90
   }
-} })
-const api_customSerializers = require('../index')({ version: 'v1.0', logger: {
+} }).handler((req,res) => {
+  req.log.testDebug('testDebug message')
+  req.log.testInfo('testDebug message')
+  req.log.trace('trace message - higher priority')
+  res.send('done')
+})
+const api_customSerializers = new API({ version: 'v1.0', logger: {
   serializers: {
     main: (req) => {
       return {
@@ -55,8 +131,10 @@ const api_customSerializers = require('../index')({ version: 'v1.0', logger: {
       }
     }
   }
-} })
-
+} }).handler((req,res) => {
+  req.log.info('info message',{test:true})
+  res.send('done')
+})
 
 // Define default event
 let event = {
@@ -83,126 +161,6 @@ let context = {
   getRemainingTimeInMillis: () => 5000
 }
 
-
-/******************************************************************************/
-/***  DEFINE TEST ROUTES                                                    ***/
-/******************************************************************************/
-
-api_default.get('/', (req,res) => {
-  req.log.trace('trace message')
-  req.log.debug('debug message')
-  req.log.info('info message')
-  req.log.warn('warn message')
-  req.log.error('error message')
-  req.log.fatal('fatal message')
-  res.send('done')
-})
-
-api_multi.get('/', (req,res) => {
-  req.log.trace('trace message')
-  req.log.debug('debug message')
-  req.log.info('info message')
-  req.log.warn('warn message')
-  req.log.error('error message')
-  req.log.fatal('fatal message')
-  res.send('done')
-})
-
-api_default.get('/test', (req,res) => {
-  res.send('done')
-})
-
-api_customLevel.get('/', (req,res) => {
-  req.log.trace('trace message')
-  req.log.debug('debug message')
-  req.log.info('info message')
-  req.log.warn('warn message')
-  req.log.error('error message')
-  req.log.fatal('fatal message')
-  res.send('done')
-})
-
-api_disableLevel.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_customMsgKey.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_customCustomKey.get('/', (req,res) => {
-  req.log.info('info message','custom messsage')
-  res.send('done')
-})
-
-api_noTimer.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_noTimestamp.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_customTimestamp.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_accessLogs.get('/', (req,res) => {
-  res.send('done')
-})
-
-api_accessLogs.get('/test', (req,res) => {
-  res.send('done')
-})
-
-api_noAccessLogs.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_nested.get('/', (req,res) => {
-  req.log.info('info message',{ customMsg: 'custom message' })
-  res.send('done')
-})
-
-api_withDetail.get('/', (req,res) => {
-  req.log.info('info message')
-  res.send('done')
-})
-
-api_customLevels.get('/', (req,res) => {
-  req.log.testDebug('testDebug message')
-  req.log.testInfo('testDebug message')
-  req.log.trace('trace message - higher priority')
-  res.send('done')
-})
-
-api_customSerializers.get('/', (req,res) => {
-  req.log.info('info message',{test:true})
-  res.send('done')
-})
-
-api_customLogger.get('/', (req,res) => {
-  req.log.info('info message','second param')
-  res.send('done')
-})
-
-api_default.get('/array', (req,res) => {
-  req.log.info('info message',['val1','val2','val3'])
-  res.send('done')
-})
-
-api_showStackTrace.get('/', (req,res) => {
-  undefinedVar // this should throw an error
-  res.send('done')
-})
-
-
 /******************************************************************************/
 /***  BEGIN TESTS                                                           ***/
 /******************************************************************************/
@@ -226,7 +184,7 @@ describe('Logging Tests:', function() {
   it('Default options (logging: true)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/', multiValueQueryStringParameters: { test: ['val1'] } })
-    let result = await new Promise(r => api_default.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_default.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -241,7 +199,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -264,7 +221,7 @@ describe('Logging Tests:', function() {
   it('Multi-value support', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/', multiValueQueryStringParameters: { test: ['val1'] } })
-    let result = await new Promise(r => api_multi.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_multi.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -279,7 +236,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -302,7 +258,7 @@ describe('Logging Tests:', function() {
   it('Multi-value support (no parameters)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/', multiValueQueryStringParameters: { } })
-    let result = await new Promise(r => api_multi.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_multi.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -317,7 +273,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -339,7 +294,7 @@ describe('Logging Tests:', function() {
   it('Default options (no logs in routes)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/test' })
-    let result = await new Promise(r => api_default.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_default_test.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -355,7 +310,7 @@ describe('Logging Tests:', function() {
   it('Custom level (debug)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/',  })
-    let result = await new Promise(r => api_customLevel.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customLevel.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -370,7 +325,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -392,7 +346,7 @@ describe('Logging Tests:', function() {
   it('Disable (via level setting)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_disableLevel.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_disableLevel.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -408,7 +362,7 @@ describe('Logging Tests:', function() {
   it('Custom Message Label', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_customMsgKey.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customMsgKey.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -423,7 +377,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).not.toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('customKey')
     expect(_log[0]).toHaveProperty('timer')
@@ -446,7 +399,7 @@ describe('Logging Tests:', function() {
   it('Custom "custom" Label', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_customCustomKey.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customCustomKey.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -461,7 +414,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).not.toHaveProperty('custom')
     expect(_log[0]).toHaveProperty('customKey')
@@ -485,7 +437,7 @@ describe('Logging Tests:', function() {
   it('Disable Timer', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_noTimer.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_noTimer.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -500,7 +452,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).not.toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -523,7 +474,7 @@ describe('Logging Tests:', function() {
   it('Disable Timestamp', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_noTimestamp.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_noTimestamp.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -538,7 +489,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).not.toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -561,7 +511,7 @@ describe('Logging Tests:', function() {
   it('Custom Timestamp', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_customTimestamp.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customTimestamp.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -577,7 +527,6 @@ describe('Logging Tests:', function() {
     expect(_log[0]).toHaveProperty('time')
     expect(typeof _log[0].time).toBe('string')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -599,8 +548,8 @@ describe('Logging Tests:', function() {
   it('Enable access logs', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_accessLogs.run(_event,context,(e,res) => { r(res) }))
-    let result2 = await new Promise(r => api_accessLogs.run(Object.assign(_event,{ path: '/test' }),context,(e,res) => { r(res) }))
+    let result = await api_accessLogs.run(_event,context)
+    let result2 = await api_accessLogs_test.run(Object.assign(_event,{ path: '/test' }),context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -622,7 +571,6 @@ describe('Logging Tests:', function() {
     // access log 1
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).not.toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -639,7 +587,6 @@ describe('Logging Tests:', function() {
     // access log 2
     expect(_log[1]).toHaveProperty('time')
     expect(_log[1]).toHaveProperty('id')
-    expect(_log[1]).toHaveProperty('route')
     expect(_log[1]).not.toHaveProperty('msg')
     expect(_log[1]).toHaveProperty('timer')
     expect(_log[1]).toHaveProperty('remaining')
@@ -660,7 +607,7 @@ describe('Logging Tests:', function() {
   it('No access logs (never)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_noAccessLogs.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_noAccessLogs.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -674,7 +621,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -696,7 +642,7 @@ describe('Logging Tests:', function() {
   it('Nested objects', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_nested.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_nested.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -711,7 +657,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('context')
@@ -736,7 +681,7 @@ describe('Logging Tests:', function() {
   it('With detail per log', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_withDetail.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_withDetail.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -751,7 +696,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -767,7 +711,6 @@ describe('Logging Tests:', function() {
 
     expect(_log[1]).toHaveProperty('time')
     expect(_log[1]).toHaveProperty('id')
-    expect(_log[1]).toHaveProperty('route')
     expect(_log[1]).toHaveProperty('timer')
     expect(_log[1]).toHaveProperty('remaining')
     expect(_log[1]).toHaveProperty('function')
@@ -785,7 +728,7 @@ describe('Logging Tests:', function() {
   it('Custom levels', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_customLevels.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customLevels.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -803,7 +746,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -812,7 +754,6 @@ describe('Logging Tests:', function() {
     // access log
     expect(_log[3]).toHaveProperty('time')
     expect(_log[3]).toHaveProperty('id')
-    expect(_log[3]).toHaveProperty('route')
     expect(_log[3]).toHaveProperty('timer')
     expect(_log[3]).toHaveProperty('remaining')
     expect(_log[3]).toHaveProperty('function')
@@ -830,7 +771,7 @@ describe('Logging Tests:', function() {
   it('Custom serializers', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_customSerializers.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customSerializers.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -846,7 +787,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).not.toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -858,7 +798,6 @@ describe('Logging Tests:', function() {
     // access log
     expect(_log[1]).toHaveProperty('time')
     expect(_log[1]).not.toHaveProperty('id')
-    expect(_log[1]).toHaveProperty('route')
     expect(_log[1]).toHaveProperty('timer')
     expect(_log[1]).toHaveProperty('remaining')
     expect(_log[1]).toHaveProperty('function')
@@ -878,7 +817,7 @@ describe('Logging Tests:', function() {
   it('Custom data (array)', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/array' })
-    let result = await new Promise(r => api_default.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_default_array.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -893,7 +832,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -903,7 +841,6 @@ describe('Logging Tests:', function() {
     // access log
     expect(_log[1]).toHaveProperty('time')
     expect(_log[1]).toHaveProperty('id')
-    expect(_log[1]).toHaveProperty('route')
     expect(_log[1]).toHaveProperty('timer')
     expect(_log[1]).toHaveProperty('remaining')
     expect(_log[1]).toHaveProperty('function')
@@ -921,7 +858,7 @@ describe('Logging Tests:', function() {
   it('Invalid custom levels configuration', async function() {
     let error
     try {
-      const api_error = require('../index')({ version: 'v1.0', logger: {
+      const api_error = new API({ version: 'v1.0', logger: {
         levels: { '123': 'test '}
       } })
     } catch(e) {
@@ -936,7 +873,7 @@ describe('Logging Tests:', function() {
   it('Invalid sampler configuration', async function() {
     let error
     try {
-      const api_error = require('../index')({ version: 'v1.0', logger: {
+      const api_error = new API({ version: 'v1.0', logger: {
         sampling: 'test'
       } })
     } catch(e) {
@@ -951,7 +888,7 @@ describe('Logging Tests:', function() {
   it('Invalid sampler rule route', async function() {
     let error
     try {
-      const api_error = require('../index')({ version: 'v1.0', logger: {
+      const api_error = new API({ version: 'v1.0', logger: {
         sampling: {
           rules: [
             { target: 0, rate: 0 }
@@ -970,7 +907,7 @@ describe('Logging Tests:', function() {
   it('Enable stack traces', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_showStackTrace.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_showStackTrace.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -985,7 +922,6 @@ describe('Logging Tests:', function() {
     // standard log
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -996,7 +932,6 @@ describe('Logging Tests:', function() {
 
     expect(_log[1]).toHaveProperty('time')
     expect(_log[1]).toHaveProperty('id')
-    expect(_log[1]).toHaveProperty('route')
     expect(_log[1]).toHaveProperty('timer')
     expect(_log[1]).toHaveProperty('remaining')
     expect(_log[1]).toHaveProperty('function')
@@ -1014,7 +949,7 @@ describe('Logging Tests:', function() {
   it('Custom Logger', async function() {
     console.log = logger
     let _event = Object.assign({},event,{ path: '/' })
-    let result = await new Promise(r => api_customLogger.run(_event,context,(e,res) => { r(res) }))
+    let result = await api_customLogger.run(_event,context)
     console.log = consoleLog
 
     expect(result).toEqual({
@@ -1031,7 +966,6 @@ describe('Logging Tests:', function() {
     expect(_log[0]).toHaveProperty('LOGGER')
     expect(_log[0]).toHaveProperty('time')
     expect(_log[0]).toHaveProperty('id')
-    expect(_log[0]).toHaveProperty('route')
     expect(_log[0]).toHaveProperty('msg')
     expect(_log[0]).toHaveProperty('timer')
     expect(_log[0]).toHaveProperty('remaining')
@@ -1042,7 +976,6 @@ describe('Logging Tests:', function() {
     expect(_log[1]).toHaveProperty('LOGGER')
     expect(_log[1]).toHaveProperty('time')
     expect(_log[1]).toHaveProperty('id')
-    expect(_log[1]).toHaveProperty('route')
     expect(_log[1]).toHaveProperty('timer')
     expect(_log[1]).toHaveProperty('remaining')
     expect(_log[1]).toHaveProperty('function')

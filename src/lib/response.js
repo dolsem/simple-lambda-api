@@ -311,7 +311,7 @@ class RESPONSE {
     );
 
     // Send the file
-    this.sendFile(file, opts, fn);
+    return this.sendFile(file, opts, fn);
   }
 
   // Convenience method for returning static files
@@ -505,6 +505,8 @@ class RESPONSE {
 
   // Sends the request to the main callback
   send(body) {
+    if (this._state === 'done') return;
+
     // Generate Etag
     if (
       this._etag && // if etag support enabled
@@ -593,7 +595,7 @@ class RESPONSE {
     detail = typeof code !== 'number' && e !== undefined ? e : detail;
     e = typeof code !== 'number' ? code : e;
     code = typeof code === 'number' ? code : e.statusCode;
-    this.app.catchErrors(e, this, code, detail);
+    this._promise = this.app.catchErrors(e, this, code, detail);
   } // end error
 } // end Response class
 
