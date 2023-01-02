@@ -20,7 +20,7 @@ let event = {
   }
 }
 
-api.handler(function(req,res) {
+api.handle(function(req,res) {
   res.status(200).json({
     method: 'get',
     status: 'ok',

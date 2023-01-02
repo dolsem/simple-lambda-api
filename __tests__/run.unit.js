@@ -25,7 +25,7 @@ let event = {
 /***  DEFINE TEST ROUTE                                                     ***/
 /******************************************************************************/
 
-api.handler((req, res) => {
+api.handle((req, res) => {
   if (req.path === '/') {
     res.status(200).json({
       method: 'get',
@@ -41,7 +41,7 @@ api.handler((req, res) => {
   }
 });
 
-api_error.handler((req,res) => {
+api_error.handle((req,res) => {
   throw new Error('some thrown error')
 });
 

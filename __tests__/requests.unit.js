@@ -3,7 +3,7 @@
 const { API } = require('..');
 
 // Init API instance
-const api = new API({ version: 'v1.0' }).handler((req, res) => {
+const api = new API({ version: 'v1.0' }).handle((req, res) => {
   if (req.path === '/test/hello') {
     let request = Object.assign(req,{app:null})
     res.cookie('test','value')

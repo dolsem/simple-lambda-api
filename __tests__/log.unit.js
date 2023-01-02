@@ -3,7 +3,7 @@
 const { API } = require('..');
 
 // Init API instance
-const api_default = new API({ logger: true }).handler((req,res) => {
+const api_default = new API({ logger: true }).handle((req,res) => {
   req.log.trace('trace message')
   req.log.debug('debug message')
   req.log.info('info message')
@@ -12,14 +12,14 @@ const api_default = new API({ logger: true }).handler((req,res) => {
   req.log.fatal('fatal message')
   res.send('done')
 })
-const api_default_test = new API({ logger: true }).handler((req,res) => {
+const api_default_test = new API({ logger: true }).handle((req,res) => {
   res.send('done')
 })
-const api_default_array = new API({ logger: true }).handler((req,res) => {
+const api_default_array = new API({ logger: true }).handle((req,res) => {
   req.log.info('info message',['val1','val2','val3'])
   res.send('done')
 })
-const api_multi = new API({ logger: { multiValue: true } }).handler((req,res) => {
+const api_multi = new API({ logger: { multiValue: true } }).handle((req,res) => {
   req.log.trace('trace message')
   req.log.debug('debug message')
   req.log.info('info message')
@@ -28,7 +28,7 @@ const api_multi = new API({ logger: { multiValue: true } }).handler((req,res) =>
   req.log.fatal('fatal message')
   res.send('done')
 })
-const api_customLevel = new API({ version: 'v1.0', logger: { level: 'debug' } }).handler((req,res) => {
+const api_customLevel = new API({ version: 'v1.0', logger: { level: 'debug' } }).handle((req,res) => {
   req.log.trace('trace message')
   req.log.debug('debug message')
   req.log.info('info message')
@@ -37,55 +37,55 @@ const api_customLevel = new API({ version: 'v1.0', logger: { level: 'debug' } })
   req.log.fatal('fatal message')
   res.send('done')
 })
-const api_disableLevel = new API({ version: 'v1.0', logger: { level: 'none' } }).handler((req,res) => {
+const api_disableLevel = new API({ version: 'v1.0', logger: { level: 'none' } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_customMsgKey = new API({ version: 'v1.0', logger: { messageKey: 'customKey' } }).handler((req,res) => {
+const api_customMsgKey = new API({ version: 'v1.0', logger: { messageKey: 'customKey' } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_customCustomKey = new API({ version: 'v1.0', logger: { customKey: 'customKey' } }).handler((req,res) => {
+const api_customCustomKey = new API({ version: 'v1.0', logger: { customKey: 'customKey' } }).handle((req,res) => {
   req.log.info('info message','custom messsage')
   res.send('done')
 })
-const api_noTimer = new API({ version: 'v1.0', logger: { timer: false } }).handler((req,res) => {
+const api_noTimer = new API({ version: 'v1.0', logger: { timer: false } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_noTimestamp = new API({ version: 'v1.0', logger: { timestamp: false } }).handler((req,res) => {
+const api_noTimestamp = new API({ version: 'v1.0', logger: { timestamp: false } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_customTimestamp = new API({ version: 'v1.0', logger: { timestamp: () => new Date().toUTCString() } }).handler((req,res) => {
+const api_customTimestamp = new API({ version: 'v1.0', logger: { timestamp: () => new Date().toUTCString() } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_accessLogs = new API({ version: 'v1.0', logger: { access: true } }).handler((req,res) => {
+const api_accessLogs = new API({ version: 'v1.0', logger: { access: true } }).handle((req,res) => {
   res.send('done')
 })
-const api_accessLogs_test = new API({ version: 'v1.0', logger: { access: true } }).handler((req,res) => {
+const api_accessLogs_test = new API({ version: 'v1.0', logger: { access: true } }).handle((req,res) => {
   res.send('done')
 })
-const api_noAccessLogs = new API({ version: 'v1.0', logger: { access: 'never' } }).handler((req,res) => {
+const api_noAccessLogs = new API({ version: 'v1.0', logger: { access: 'never' } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_nested = new API({ version: 'v1.0', logger: { nested: true, access: true } }).handler((req,res) => {
+const api_nested = new API({ version: 'v1.0', logger: { nested: true, access: true } }).handle((req,res) => {
   req.log.info('info message',{ customMsg: 'custom message' })
   res.send('done')
 })
-const api_withDetail = new API({ version: 'v1.0', logger: { detail: true } }).handler((req,res) => {
+const api_withDetail = new API({ version: 'v1.0', logger: { detail: true } }).handle((req,res) => {
   req.log.info('info message')
   res.send('done')
 })
-const api_showStackTrace = new API({ version: 'v1.0', logger: { stack: true } }).handler((req,res) => {
+const api_showStackTrace = new API({ version: 'v1.0', logger: { stack: true } }).handle((req,res) => {
   undefinedVar // this should throw an error
   res.send('done')
 })
 const api_customLogger = new API({ version: 'v1.0', logger: {
   log: (x) => console.log(JSON.stringify(Object.assign(JSON.parse(x),{ LOGGER: true })))
-} }).handler((req,res) => {
+} }).handle((req,res) => {
   req.log.info('info message','second param')
   res.send('done')
 })
@@ -95,7 +95,7 @@ const api_customLevels = new API({ version: 'v1.0', logger: {
     testInfo: 30,
     trace: 90
   }
-} }).handler((req,res) => {
+} }).handle((req,res) => {
   req.log.testDebug('testDebug message')
   req.log.testInfo('testDebug message')
   req.log.trace('trace message - higher priority')
@@ -131,7 +131,7 @@ const api_customSerializers = new API({ version: 'v1.0', logger: {
       }
     }
   }
-} }).handler((req,res) => {
+} }).handle((req,res) => {
   req.log.info('info message',{test:true})
   res.send('done')
 })

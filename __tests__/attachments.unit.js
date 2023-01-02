@@ -26,7 +26,7 @@ let event = {
 describe('Attachment Tests:', function() {
 
   it('Simple attachment', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment().send({ status: 'ok' })
     });
 
@@ -36,7 +36,7 @@ describe('Attachment Tests:', function() {
   }) // end it
 
   it('PDF attachment w/ path', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment('/test/foo.pdf').send('filedata')
     });
 
@@ -46,7 +46,7 @@ describe('Attachment Tests:', function() {
   }) // end it
 
   it('PNG attachment w/ path', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment('/test/foo.png').send('filedata')
     });
 
@@ -56,7 +56,7 @@ describe('Attachment Tests:', function() {
   }) // end it
 
   it('CSV attachment w/ path', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment('test/path/foo.csv').send('filedata')
     });
 
@@ -66,7 +66,7 @@ describe('Attachment Tests:', function() {
   }) // end it
 
   it('Custom MIME type attachment w/ path', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment('/test/path/foo.test').send('filedata')
     });
 
@@ -76,7 +76,7 @@ describe('Attachment Tests:', function() {
   }) // end it
 
   it('Empty string', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment(' ').send('filedata')
     });
 
@@ -86,7 +86,7 @@ describe('Attachment Tests:', function() {
   }) // end it
 
   it('Null string', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.attachment(null).send('filedata')
     });
 

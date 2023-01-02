@@ -99,7 +99,7 @@ api5.use((req, res, next) => {
 /***  DEFINE TEST ROUTES                                                    ***/
 /******************************************************************************/
 
-api.handler((req, res) => {
+api.handle((req, res) => {
   if (req.path === '/test') {
     res.status(200).json({
       method: "get",
@@ -120,7 +120,7 @@ api.handler((req, res) => {
   }
 });
 
-api2.handler((req, res) => {
+api2.handle((req, res) => {
   if (req.path === '/test/error') {
     res.status(200).json({ message: "should not get here" });
   } else {
@@ -131,7 +131,7 @@ api2.handler((req, res) => {
   }
 });
 
-api3.handler((req, res) => {
+api3.handle((req, res) => {
   res.status(200).json({
     method: "get",
     middleware1: req.middleware1 ? true : false,
@@ -139,12 +139,12 @@ api3.handler((req, res) => {
   });
 });
 
-api4.handler((req, res) => {
+api4.handle((req, res) => {
   // This should not run because of the middleware return
   res.status(200).send("route response");
 });
 
-api5.handler((req, res) => {
+api5.handle((req, res) => {
   // This should not run because of the middleware return
   res.status(200).send("route response");
 });

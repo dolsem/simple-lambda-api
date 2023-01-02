@@ -26,7 +26,7 @@ let event = {
 describe('Context Tests:', function() {
 
   it('Parse ID and context object', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.send({
         id: req.id,
         context: req.context

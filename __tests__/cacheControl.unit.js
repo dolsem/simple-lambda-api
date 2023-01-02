@@ -26,7 +26,7 @@ let event = {
 describe('cacheControl Tests:', function() {
 
   it('Basic cacheControl (no options)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache().send('cache')
     });
 
@@ -45,7 +45,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (true)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(true).send('cache')
     });
 
@@ -64,7 +64,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (false)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(false).send('cache')
     });
 
@@ -82,7 +82,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (maxAge)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(1000).send('cache')
     });
 
@@ -101,7 +101,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (private)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(1000,true).send('cache')
     });
 
@@ -120,7 +120,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (disable private)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(1000,false).send('cache')
     });
 
@@ -139,7 +139,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (invalid private value)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(1000,'test').send('cache')
     });
 
@@ -158,7 +158,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (undefined)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(undefined).send('cache')
     });
 
@@ -177,7 +177,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Basic cacheControl (null)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache(null).send('cache')
     });
 
@@ -196,7 +196,7 @@ describe('cacheControl Tests:', function() {
   }) // end it
 
   it('Custom cacheControl (string)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.cache('custom value').send('cache')
     });
 

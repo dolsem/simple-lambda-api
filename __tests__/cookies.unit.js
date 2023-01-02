@@ -27,7 +27,7 @@ describe('Cookie Tests:', function() {
 
   describe("Set", function() {
     it('Basic Session Cookie', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value').send({})
       });
 
@@ -42,7 +42,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Basic Session Cookie (multi-header)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value').cookie('test2','value2').send({})
       });
 
@@ -57,7 +57,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Basic Session Cookie (encoded value)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','http:// [] foo;bar').send({})
       });
 
@@ -73,7 +73,7 @@ describe('Cookie Tests:', function() {
 
 
     it('Basic Session Cookie (object value)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test',{ foo: "bar" }).send({})
       });
 
@@ -89,7 +89,7 @@ describe('Cookie Tests:', function() {
 
 
     it('Basic Session Cookie (non-string name)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie(123,'value').send({})
       });
 
@@ -105,7 +105,7 @@ describe('Cookie Tests:', function() {
 
 
     it('Permanent Cookie (set expires)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', { expires: new Date('January 1, 2019 00:00:00 GMT') }).send({})
       });
 
@@ -120,7 +120,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set maxAge)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', { maxAge: 60*60*1000 }).send({})
       });
 
@@ -135,7 +135,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set domain)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           expires: new Date('January 1, 2019 00:00:00 GMT')
@@ -153,7 +153,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set httpOnly)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           httpOnly: true,
@@ -172,7 +172,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set secure)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           secure: true,
@@ -191,7 +191,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set path)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           secure: true,
@@ -211,7 +211,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set sameSite - true)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           sameSite: true,
@@ -230,7 +230,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set sameSite - false)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           sameSite: false,
@@ -249,7 +249,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Permanent Cookie (set sameSite - string)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cookie('test','value', {
           domain: 'test.com',
           sameSite: 'Test',
@@ -271,7 +271,7 @@ describe('Cookie Tests:', function() {
 
 
   describe("Parse", function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.send({ cookies: req.cookies })
     });
 
@@ -326,7 +326,7 @@ describe('Cookie Tests:', function() {
   describe("Clear", function() {
 
     it('Clear cookie (no options)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.clearCookie('test').send({})
       });
 
@@ -343,7 +343,7 @@ describe('Cookie Tests:', function() {
     }) // end it
 
     it('Clear cookie (w/ options)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.clearCookie('test', { domain: 'test.com', httpOnly: true, secure: true }).send({})
       });
 

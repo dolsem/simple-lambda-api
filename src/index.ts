@@ -118,7 +118,7 @@ export class API<S extends Stack = []> {
 
   } // end constructor
 
-  handler(handler: HandlerFunction<S>) {
+  handle(handler: HandlerFunction<S>) {
     if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
       this._stack[this._stack.length - 1] = handler;
     } else {
@@ -198,7 +198,7 @@ export class API<S extends Stack = []> {
     return this as API<L.Concat<S, S2>>;
   } // end use
 
-  handleErrors<S2 extends Stack = []>(...args: ErrorHandlingMiddleware<S>[]) {
+  catch<S2 extends Stack = []>(...args: ErrorHandlingMiddleware<S>[]) {
     for (let arg in args) {
       if (typeof args[arg] === 'function') {
         this._errors.push(args[arg]);

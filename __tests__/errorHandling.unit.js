@@ -35,12 +35,12 @@ const createApi1 = () => {
     next()
   });
   
-  api.handleErrors(function(err,req,res,next) {
+  api.catch(function(err,req,res,next) {
     req.testError1 = '123'
     next()
   });
   
-  api.handleErrors(function(err,req,res,next) {
+  api.catch(function(err,req,res,next) {
     req.testError2 = '456'
     if (req.path === '/testErrorMiddleware') {
       res.header('Content-Type','text/plain')
@@ -51,7 +51,7 @@ const createApi1 = () => {
   });
   
   // Add error with promise/delay
-  api.handleErrors(function(err,req,res,next) {
+  api.catch(function(err,req,res,next) {
     if (req.path === '/testErrorPromise') {
       let start = Date.now()
       // TODO: shouldn't have to use return
@@ -84,7 +84,7 @@ const sendError = (err,req,res,next) => {
 const createApi2 = () => {
   const api = new API({ version: 'v1.0' });
 
-  api.handleErrors(errorMiddleware1,errorMiddleware2,sendError)
+  api.catch(errorMiddleware1,errorMiddleware2,sendError)
 
   return api;
 };
@@ -96,7 +96,7 @@ const returnError = (err,req,res,next) => {
 const createApi3 = () => {
   const api = new API({ version: 'v1.0' });
 
-  api.handleErrors(returnError,errorMiddleware1)
+  api.catch(returnError,errorMiddleware1)
 
   return api;
 };
@@ -109,7 +109,7 @@ const callError = (err,req,res,next) => {
 const createApi4 = () => {
   const api = new API({ version: 'v1.0' });
 
-  api.handleErrors(callError,errorMiddleware1)
+  api.catch(callError,errorMiddleware1)
 
   return api;
 };
@@ -117,7 +117,7 @@ const createApi4 = () => {
 const createApi5 = () => {
   const api = new API({ version: 'v1.0', logger: { access: 'never' }});
 
-  api.handleErrors((err,req,res,next) => {
+  api.catch((err,req,res,next) => {
     if (err instanceof CustomError) {
       res.status(401)
     }
@@ -130,7 +130,7 @@ const createApi5 = () => {
 const createApiErrors = () => {
   const api = new API({ version: 'v1.0' });
 
-  api.handleErrors(function(err,req,res,next) {
+  api.catch(function(err,req,res,next) {
     res.send({ errorType: err.name })
   });
 
@@ -163,7 +163,7 @@ describe('Error Handling Tests:', function() {
   describe('Standard', function() {
 
     it('Called Error', async function() {
-      const api = createApi1().handler(function(req,res) {
+      const api = createApi1().handle(function(req,res) {
         res.error('This is a test error message')
       });
 
@@ -173,7 +173,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Thrown Error', async function() {
-      const api = createApi1().handler(function(req,res) {
+      const api = createApi1().handle(function(req,res) {
         throw new Error('This is a test thrown error')
       });
 
@@ -183,7 +183,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Simulated Error', async function() {
-      const api = createApi1().handler(function(req,res) {
+      const api = createApi1().handle(function(req,res) {
         res.status(405)
         res.json({ error: 'This is a simulated error' })
       });
@@ -198,7 +198,7 @@ describe('Error Handling Tests:', function() {
   describe('Middleware', function() {
 
     it('Error Middleware', async function() {
-      const api = createApi1().handler(function(req,res) {
+      const api = createApi1().handle(function(req,res) {
         res.error('This test error message should be overridden')
       });
 
@@ -208,7 +208,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it.only('Error Middleware w/ Promise', async function() {
-      const api = createApi1().handler(function(req,res) {
+      const api = createApi1().handle(function(req,res) {
         res.error('This is a test error message')
       });
 
@@ -218,7 +218,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Multiple error middlewares', async function() {
-      const api2 = createApi2().handler(function(req,res) {
+      const api2 = createApi2().handle(function(req,res) {
         res.status(500)
         res.error('This is a test error message')
       });
@@ -229,7 +229,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Returned error from middleware (async)', async function() {
-      const api3 = createApi3().handler(function(req,res) {
+      const api3 = createApi3().handle(function(req,res) {
         res.error('This is a test error message')
       });
 
@@ -239,7 +239,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Returned error from middleware (callback)', async function() {
-      const api4 = createApi4().handler(function(req,res) {
+      const api4 = createApi4().handle(function(req,res) {
         res.error(403,'This is a test error message')
       });
 
@@ -251,7 +251,7 @@ describe('Error Handling Tests:', function() {
 
   describe('Error Types', function() {
     it('FileError (s3)', async function() {
-      const api_errors = createApiErrors().handler((req,res) => {
+      const api_errors = createApiErrors().handle((req,res) => {
         res.sendFile('s3://test')
       });
 
@@ -261,7 +261,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('FileError (local)', async function() {
-      const api_errors = createApiErrors().handler((req,res) => {
+      const api_errors = createApiErrors().handle((req,res) => {
         res.sendFile('./missing.txt')
       });
 
@@ -277,7 +277,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('ResponseError', async function() {
-      const api_errors = createApiErrors().handler((req,res) => {
+      const api_errors = createApiErrors().handle((req,res) => {
         res.redirect(310,'http://www.google.com')
       });
 
@@ -302,7 +302,7 @@ describe('Error Handling Tests:', function() {
   describe('Logging', function() {
 
     it('Thrown Error', async function() {
-      const api5 = createApi5().handler(function(req,res) {
+      const api5 = createApi5().handle(function(req,res) {
         throw new Error('This is a test thrown error')
       });
 
@@ -319,7 +319,7 @@ describe('Error Handling Tests:', function() {
 
 
     it('API Error', async function() {
-      const api5 = createApi5().handler(function(req,res) {
+      const api5 = createApi5().handle(function(req,res) {
         res.error('This is a test error message')
       });
 
@@ -335,7 +335,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Error with Detail', async function() {
-      const api5 = createApi5().handler(function(req,res) {
+      const api5 = createApi5().handle(function(req,res) {
         res.error('This is a test error message','details')
       });
 
@@ -352,7 +352,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Custom Error', async function() {
-      const api5 = createApi5().handler(function(req,res) {
+      const api5 = createApi5().handle(function(req,res) {
         throw new CustomError('This is a custom error',403)
       });
 
@@ -370,7 +370,7 @@ describe('Error Handling Tests:', function() {
 
 
     it('Error, no props', async function() {
-      const api6 = createApi6().handler(function(req,res) {
+      const api6 = createApi6().handle(function(req,res) {
         res.error('This is a test error message')
       });
 
@@ -384,7 +384,7 @@ describe('Error Handling Tests:', function() {
     }) // end it
 
     it('Should not log error if option logger.errorLogging is false', async function() {
-      const api7 = createApi7().handler(function(req,res) {
+      const api7 = createApi7().handle(function(req,res) {
         throw new Error('This is a test thrown error')
       });
       
@@ -399,7 +399,7 @@ describe('Error Handling Tests:', function() {
     })
 
     it('Should log error if option logger.errorLogging is true', async function() {
-      const api8 = createApi8().handler(function(req,res) {
+      const api8 = createApi8().handle(function(req,res) {
         throw new Error('This is a test thrown error')
       });
       
@@ -418,7 +418,7 @@ describe('Error Handling Tests:', function() {
 
   describe('base64 errors', function() {
     it('Should return errors with base64 encoding', async function() {
-      const api9 = createApi9().handler(function(req,res) {
+      const api9 = createApi9().handle(function(req,res) {
         throw new Error('This is a test thrown error')
       });
 

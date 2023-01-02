@@ -46,7 +46,7 @@ describe('getLink Tests:', function() {
   })
 
   it('Simple path', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, null, 'https://s3.amazonaws.com/my-test-bucket/test/test.txt?AWSAccessKeyId=AKXYZ&Expires=1534290845&Signature=XYZ')
       let url = await res.getLink('s3://my-test-bucket/test/test.txt')
       res.send(url)
@@ -64,7 +64,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Simple path (with custom expiration)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, null, 'https://s3.amazonaws.com/my-test-bucket/test/test.txt?AWSAccessKeyId=AKXYZ&Expires=1534290845&Signature=XYZ')
       let url = await res.getLink('s3://my-test-bucket/test/test.txt',60)
       res.send(url)
@@ -83,7 +83,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Simple path (with invalid expiration)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, null, 'https://s3.amazonaws.com/my-test-bucket/test/test.txt?AWSAccessKeyId=AKXYZ&Expires=1534290845&Signature=XYZ')
       let url = await res.getLink('s3://my-test-bucket/test/test.txt','test')
       res.send(url)
@@ -102,7 +102,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Simple path (with float expiration)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, null, 'https://s3.amazonaws.com/my-test-bucket/test/test.txt?AWSAccessKeyId=AKXYZ&Expires=1534290845&Signature=XYZ')
       let url = await res.getLink('s3://my-test-bucket/test/test.txt',3.145)
       res.send(url)
@@ -121,7 +121,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Error (with delayed callback)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, 'getSignedUrl error', null)
       let url = await res.getLink('s3://my-test-bucket/test/test.txt', async (e) => {
         return await delay(100).then(() => {})
@@ -141,7 +141,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Custom Error (with delayed callback)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, 'getSignedUrl error', null)
       let url = await res.getLink('s3://my-test-bucket/test/test.txt', 60 ,async (e) => {
         return await delay(100).then(() => {
@@ -163,7 +163,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Error (with default callback)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       stub.callsArgWith(2, 'getSignedUrl error', null)
       let url = await res.getLink('s3://my-test-bucket/test/test.txt', 900)
       res.send(url)
@@ -181,7 +181,7 @@ describe('getLink Tests:', function() {
   }) // end it
 
   it('Error (invalid S3 path)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       //stub.callsArgWith(2, 'getSignedUrl error', null)
       let url = await res.getLink('s3://my-test-bucket', 900)
       res.send(url)

@@ -34,7 +34,7 @@ describe('Header Tests:', function() {
 
   describe('Standard Tests:', function() {
     it('New Header: /test -- test: testVal', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.header('test','testVal')
         res.status(200).json({ method: 'get', status: 'ok' })
       });
@@ -48,7 +48,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Empty Header - Default', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.header('test')
         res.status(200).json({ method: 'get', status: 'ok' })
       });
@@ -59,7 +59,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Override Header: /testOveride -- Content-Type: text/html', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.header('Content-Type','text/html')
         res.status(200).send('<div>testHTML</div>')
       });
@@ -70,7 +70,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Append to Header: /testAppend (multi-header)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.header('test','testVal1')
         res.header('test','testVal2',true)
         res.status(200).json({ method: 'get', status: 'ok' })
@@ -82,7 +82,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Multi-value Header: /testMulti (multi-header)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.header('test',['testVal1','testVal2'])
         res.status(200).json({ method: 'get', status: 'ok' })
       });
@@ -93,7 +93,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Multi-value Header: /testMulti (null header)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.header('test',['testVal1','testVal2'])
         res.status(200).json({ method: 'get', status: 'ok' })
       });
@@ -104,7 +104,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('HTML Convenience Method: /testHTML', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).html('<div>testHTML</div>')
       });
 
@@ -114,7 +114,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('JSONP Convenience Method: /testJSONP', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).jsonp({ method: 'get', status: 'ok' })
       });
 
@@ -125,7 +125,7 @@ describe('Header Tests:', function() {
 
 
     it('Get Header (as string)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).header('TestHeader','test')
         res.json({
           headers: res.getHeader(),
@@ -151,7 +151,7 @@ describe('Header Tests:', function() {
 
 
     it('Get Header (as array)', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).header('TestHeader','test').header('TestHeader','test2',true)
         res.json({
           headers: res.getHeader(undefined,true),
@@ -176,7 +176,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Has Header', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).header('TestHeader','test')
         res.json({
           hasHeader: res.hasHeader('testheader'),
@@ -199,7 +199,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Remove Header', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).header('TestHeader','test').header('NewHeader','test').removeHeader('testHeader')
         res.json({
           removeHeader: res.hasHeader('testheader') ? false : true,
@@ -220,7 +220,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Pass whitelisted headers on error', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.status(200).header('TestStrippedHeader', 'RemoveMe')
         res.status(200).header('access-control-allow-methods', ['GET, OPTIONS'])
         res.status(200).header('access-control-allow-origin', ['example.com'])
@@ -245,7 +245,7 @@ describe('Header Tests:', function() {
   describe('CORS Tests:', function() {
 
     it('Add Default CORS Headers', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cors().json({})
       });
 
@@ -264,7 +264,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Add Custom CORS Headers', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cors({
           origin: 'example.com',
           methods: 'GET, OPTIONS',
@@ -293,7 +293,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Override CORS Headers #1', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cors().cors({
           origin: 'example.com',
           credentials: true
@@ -316,7 +316,7 @@ describe('Header Tests:', function() {
     }) // end it
 
     it('Override CORS Headers #2', async function() {
-      const api = createApi().handler(function(req,res) {
+      const api = createApi().handle(function(req,res) {
         res.cors().cors({
           methods: 'GET, PUT, POST'
         }).json({})
@@ -339,7 +339,7 @@ describe('Header Tests:', function() {
 
 
   describe('Authorization Tests:', function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.json({
         auth: req.auth
       })
@@ -391,7 +391,7 @@ describe('Header Tests:', function() {
   }) // end Auth tests
 
   describe('CloudFront:', function() {
-    const api = createApi().handler((req,res) => {
+    const api = createApi().handle((req,res) => {
       res.send({ clientType: req.clientType, clientCountry: req.clientCountry })
     });
 

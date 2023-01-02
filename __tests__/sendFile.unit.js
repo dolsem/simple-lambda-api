@@ -46,7 +46,7 @@ describe('SendFile Tests:', function() {
   })
 
   it('Bad path', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile();
     });
     let _event = Object.assign({},event,{ path: '/sendfile/badpath' })
@@ -55,7 +55,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Missing file', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('./test-missing.txt')
     });
     let _event = Object.assign({},event,{ path: '/sendfile' })
@@ -64,7 +64,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Missing file with custom catch', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('./test-missing.txt', err => {
         if (err) {
           res.error(404,'There was an error accessing the requested file')
@@ -77,7 +77,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   describe('Text file w/ callback override (promise)', () => {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       // TODO: shouldn't need to return the promise
       return res.sendFile('__tests__/test.txt' + (req.query.test ? req.query.test : ''), err => {
         // Return a promise
@@ -115,7 +115,7 @@ describe('SendFile Tests:', function() {
   });
 
   it('Text file error w/ callback override (promise - no end)', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       // TODO: shouldn't need to return the promise
       return res.sendFile('__tests__/test.txtx', err => {
         // Return a promise
@@ -133,7 +133,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Buffer Input', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile(fs.readFileSync('__tests__/test.txt'));
     });
     let _event = Object.assign({},event,{ path: '/sendfile/buffer' })
@@ -149,7 +149,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Text file w/ headers', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('__tests__/test.txt', {
         headers: { 'x-test': 'test', 'x-timestamp': 1 },
         private: false
@@ -170,7 +170,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Text file w/ root path', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('test.txt', { root: './__tests__/' });
     });
     let _event = Object.assign({},event,{ path: '/sendfile/root' })
@@ -186,7 +186,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Text file w/ headers (private cache)', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('__tests__/test.txt', {
         headers: { 'x-test': 'test', 'x-timestamp': 1 },
         private: true
@@ -207,7 +207,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('Text file custom Last-Modified', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('__tests__/test.txt', {
         lastModified: new Date('Fri, 1 Jan 2018 00:00:00 GMT')
       });
@@ -226,7 +226,7 @@ describe('SendFile Tests:', function() {
 
 
   it('Text file no Last-Modified', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('__tests__/test.txt', {
         lastModified: false
       });
@@ -244,7 +244,7 @@ describe('SendFile Tests:', function() {
 
 
   it('Text file no Cache-Control', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('__tests__/test.txt', {
         cacheControl: false
       });
@@ -261,7 +261,7 @@ describe('SendFile Tests:', function() {
 
 
   it('Text file custom Cache-Control', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('__tests__/test.txt', {
         cacheControl: 'no-cache, no-store'
       });
@@ -279,7 +279,7 @@ describe('SendFile Tests:', function() {
 
 
   it('S3 file', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       stub.withArgs({Bucket: 'my-test-bucket', Key: 'test.txt'}).returns({
         promise: () => { return {
           AcceptRanges: 'bytes',
@@ -308,7 +308,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('S3 file w/ nested path', async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       stub.withArgs({Bucket: 'my-test-bucket', Key: 'test/test.txt'}).returns({
         promise: () => { return {
           AcceptRanges: 'bytes',
@@ -337,7 +337,7 @@ describe('SendFile Tests:', function() {
   }) // end it
 
   it('S3 file error',async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       stub.withArgs({Bucket: 'my-test-bucket', Key: 'file-does-not-exist.txt'})
         .throws(new Error("NoSuchKey: The specified key does not exist."))
   
@@ -355,7 +355,7 @@ describe('SendFile Tests:', function() {
 
 
   it('S3 bad path error',async function() {
-    const api = new API(options).handleErrors(errorHandler).handler((req, res) => {
+    const api = new API(options).catch(errorHandler).handle((req, res) => {
       res.sendFile('s3://my-test-bucket')
     });
     let _event = Object.assign({},event,{ path: '/sendfile/s3-bad-path' })

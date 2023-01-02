@@ -27,7 +27,7 @@ let event = {
 describe('modified Tests:', function() {
 
   it('modified (no options)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.modified().send('cache')
     });
 
@@ -47,7 +47,7 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (true)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.modified(true).send('cache')
     });
 
@@ -67,7 +67,7 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (false)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.modified(false).send('cache')
     });
 
@@ -84,7 +84,7 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (date)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.modified(new Date('2018-08-01')).send('cache')
     });
 
@@ -102,7 +102,7 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (string)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.modified('2018-08-01').send('cache')
     });
 
@@ -121,7 +121,7 @@ describe('modified Tests:', function() {
   }) // end it
 
   it('modified (invalid date)', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.modified('test').send('cache')
     });
 

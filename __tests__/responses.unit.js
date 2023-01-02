@@ -50,7 +50,7 @@ let event = {
 
 let stub
 
-api.handler((req, res) => {
+api.handle((req, res) => {
   if (req.path === '/testObjectResponse') {
     res.send({ object: true });
   } else if (req.path === '/testNumberResponse') {
@@ -87,11 +87,11 @@ api.handler((req, res) => {
 });
 
 // Secondary route
-api2.handler((req, res) => {
+api2.handle((req, res) => {
   res.jsonp({ foo: 'bar' });
 });
 
-api3.handler((req, res) => {
+api3.handle((req, res) => {
   if (req.path === '/test') {
     res.send({ object: true });
   } else if (req.path === '/testJSON') {
@@ -101,11 +101,11 @@ api3.handler((req, res) => {
   }
 });
 
-api4.handler((req, res) => {
+api4.handle((req, res) => {
   res.json({ object: true });
 });
 
-api5.handler((req, res) => {
+api5.handle((req, res) => {
   res.json({ object: true });
 });
 

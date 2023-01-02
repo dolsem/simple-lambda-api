@@ -50,7 +50,7 @@ let context = {
   getRemainingTimeInMillis: () => 5000
 }
 
-api_rules.handler((req, res) => {
+api_rules.handle((req, res) => {
   if (req.path === '/') {
     req.log.trace('request #'+request++)
     res.send({ method: req.method, rule: req._sampleRule })

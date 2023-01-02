@@ -27,7 +27,7 @@ let event = {
 describe('Etag Tests:', function() {
 
   it('Initial request', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.etag(true).send({ test: true })
     });
 
@@ -40,7 +40,7 @@ describe('Etag Tests:', function() {
   }) // end it
 
   it('Initial request 2', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.etag(true).send({ test: false })
     });
 
@@ -53,7 +53,7 @@ describe('Etag Tests:', function() {
   }) // end it
 
   it('Second request', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.etag(true).send({ test: true })
     });
 
@@ -66,7 +66,7 @@ describe('Etag Tests:', function() {
   }) // end it
 
   it('Second request 2', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.etag(true).send({ test: false })
     });
 
@@ -79,7 +79,7 @@ describe('Etag Tests:', function() {
   }) // end it
 
   it('Non-matching Etags', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.etag(true).send({ test: true })
     });
 
@@ -92,7 +92,7 @@ describe('Etag Tests:', function() {
   }) // end it
 
   it('Disable Etag', async function() {
-    const api = createApi().handler(function(req,res) {
+    const api = createApi().handle(function(req,res) {
       res.etag(false).send({ noEtag: true })
     });
 

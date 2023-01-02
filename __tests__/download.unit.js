@@ -19,7 +19,7 @@ const createApi = () => {
   api._test = true;
 
   // Error Middleware
-  api.handleErrors(function(err,req,res,next) {
+  api.catch(function(err,req,res,next) {
     res.header('x-error','true')
     next()
   })
@@ -52,7 +52,7 @@ describe('Download Tests:', function() {
   })
 
   it('Bad path', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download();
     });
 
@@ -62,7 +62,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('Missing file', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('./test-missing.txt')
     });
 
@@ -72,7 +72,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('Missing file with custom catch', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('./test-missing.txt', err => {
         if (err) {
           res.error(404,'There was an error accessing the requested file')
@@ -86,7 +86,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('Text file w/ callback override (promise)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('__tests__/test.txt' + (req.query.test ? req.query.test : ''), err => {
     
         // Return a promise
@@ -118,7 +118,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('Text file error w/ callback override (promise)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('__tests__/test.txt' + (req.query.test ? req.query.test : ''), err => {
     
         // Return a promise
@@ -141,7 +141,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('Buffer Input (no filename)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download(fs.readFileSync('__tests__/test.txt'), req.query.filename ? req.query.filename : undefined)
     });
 
@@ -159,7 +159,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('Buffer Input (w/ filename)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download(fs.readFileSync('__tests__/test.txt'), req.query.filename ? req.query.filename : undefined)
     });
 
@@ -178,7 +178,7 @@ describe('Download Tests:', function() {
 
 
   it('Text file w/ headers', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('__tests__/test.txt', {
         headers: { 'x-test': 'test', 'x-timestamp': 1 }
       })
@@ -201,7 +201,7 @@ describe('Download Tests:', function() {
 
 
   it('Text file w/ filename, options, and callback', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('__tests__/test.txt', 'test-file.txt', { private: true, maxAge: 3600000 }, err => { res.header('x-callback','true') })
     });
 
@@ -221,7 +221,7 @@ describe('Download Tests:', function() {
 
 
   it('Text file w/ filename and callback (no options)', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
       await res.download('__tests__/test.txt', 'test-file.txt', err => { res.header('x-callback','true') })
     });
 
@@ -241,7 +241,7 @@ describe('Download Tests:', function() {
 
 
   it('S3 file', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
 
       stub.withArgs({Bucket: 'my-test-bucket', Key: 'test.txt'}).returns({
         promise: () => { return {
@@ -273,7 +273,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('S3 file w/ nested path', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
 
       stub.withArgs({Bucket: 'my-test-bucket', Key: 'test/test.txt'}).returns({
         promise: () => { return {
@@ -305,7 +305,7 @@ describe('Download Tests:', function() {
   }) // end it
 
   it('S3 file error', async function() {
-    const api = createApi().handler(async function(req,res) {
+    const api = createApi().handle(async function(req,res) {
 
       stub.withArgs({Bucket: 'my-test-bucket', Key: 'file-does-not-exist.txt'})
         .throws(new Error("NoSuchKey: The specified key does not exist."))
