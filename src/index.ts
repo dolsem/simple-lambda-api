@@ -1,4 +1,4 @@
-import type { APIGatewayEvent, Context } from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyEventV2, Context } from 'aws-lambda';
 import type { L } from 'ts-toolbelt';
 
 import type {
@@ -80,7 +80,7 @@ export class API<S extends Stack = []> {
   // Global error status (used for response parsing errors)
   private _errorStatus = 500;
 
-  private _event: APIGatewayEvent;
+  private _event: APIGatewayProxyEvent | APIGatewayProxyEventV2;
   private _context: Context;
 
   constructor(props: Options) {
@@ -130,7 +130,7 @@ export class API<S extends Stack = []> {
   }
 
   // RUN: This handles the event and returns response
-  async run(event: APIGatewayEvent, context: Context) {
+  async run(event: APIGatewayProxyEvent | APIGatewayProxyEventV2, context: Context) {
     if (this._stack.length < 1) {
       throw new ConfigurationError('No handler or middleware specified.');
     }
