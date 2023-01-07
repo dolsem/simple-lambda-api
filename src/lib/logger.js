@@ -242,12 +242,14 @@ exports.sampler = (app, req) => {
     req._sampleRule = rule;
 
     // Get last sample time (default start, last, fixed count, period count and total count)
-    app._sampleCounts ||= {
-      start: 0,
-      fCount: 0,
-      pCount: 0,
-      tCount: 0,
-    };
+    if (!app._sampleCounts) {
+      app._sampleCounts = {
+        start: 0,
+        fCount: 0,
+        pCount: 0,
+        tCount: 0,
+      };
+    }
     let counts = app._sampleCounts
 
     let now = Date.now();
