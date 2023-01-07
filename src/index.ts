@@ -75,7 +75,7 @@ export class API<S extends Stack = []> {
   private _errors = [];
 
   // Executed after the callback
-  private _finally: FinallyFunction<S> = () => {};
+  private _finally: FinallyFunction<S> | undefined;
 
   // Global error status (used for response parsing errors)
   private _errorStatus = 500;
@@ -155,7 +155,7 @@ export class API<S extends Stack = []> {
         // eslint-disable-next-line
         await new Promise<void>(async (r) => {
           try {
-            let rtn = await fn(request, response, () => {
+            const rtn = await fn(request, response, () => {
               r();
             });
             if (rtn) response.send(rtn);
@@ -181,7 +181,7 @@ export class API<S extends Stack = []> {
     // Init middleware stack
 
     // Add func args as middleware
-    for (let arg in args) {
+    for (const arg in args) {
       if (typeof args[arg] === 'function') {
         if (this._stack.length > 0 && this._stack[this._stack.length - 1] === this._handler) {
           this._stack[this._stack.length - 1] = args[arg];
@@ -199,7 +199,7 @@ export class API<S extends Stack = []> {
   } // end use
 
   catch<S2 extends Stack = []>(...args: ErrorHandlingMiddleware<S>[]) {
-    for (let arg in args) {
+    for (const arg in args) {
       if (typeof args[arg] === 'function') {
         this._errors.push(args[arg]);
       } else {
@@ -240,7 +240,7 @@ export class API<S extends Stack = []> {
     // Set the status code
     response.status(code ? code : this._errorStatus);
 
-    let info = {
+    const info = {
       detail,
       statusCode: response._statusCode,
       coldStart: response._request.coldStart,
@@ -268,8 +268,8 @@ export class API<S extends Stack = []> {
       for (const err of this._errors) {
         if (response._state === 'done') break;
         // Promisify error middleware
-        await new Promise<void>(async (r) => {
-          let rtn = await err(e, response._request, response, () => {
+        await new Promise<void>(async (r) => { // eslint-disable-line no-async-promise-executor
+          const rtn = await err(e, response._request, response, () => {
             r();
           });
           if (rtn) response.send(rtn);
@@ -288,7 +288,7 @@ export class API<S extends Stack = []> {
     response._state = 'done';
 
     // Execute finally
-    await this._finally(response._request, response);
+    await this._finally?.(response._request, response);
 
     // Output logs
     response._request._logs.forEach((log) => {
@@ -306,7 +306,7 @@ export class API<S extends Stack = []> {
       (this._logger.access || response._request._logs.length > 0) &&
       this._logger.access !== 'never'
     ) {
-      let access = Object.assign(
+      const access = Object.assign(
         this._logger.log(
           'access',
           undefined,

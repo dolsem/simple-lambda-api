@@ -1,7 +1,5 @@
 import {
   APIGatewayEventRequestContext,
-  APIGatewayProxyEvent,
-  APIGatewayProxyEventV2,
   Context,
 } from 'aws-lambda';
 import { U } from 'ts-toolbelt';
@@ -59,7 +57,7 @@ export declare type LoggerFunction = (
 export declare type NextFunction = () => void;
 export declare type TimestampFunction = () => string;
 export declare type SerializerFunction = (body: object) => string;
-export declare type FinallyFunction<S extends Stack = []> = (req: Request<S>, res: Response<S>) => void;
+export declare type FinallyFunction<S extends Stack = []> = (req: Request<S>, res: Response<S>) => void | Promise<void>;
 export declare type METHODS =
   | 'GET'
   | 'POST'

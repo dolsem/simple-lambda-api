@@ -4,11 +4,10 @@
     "node": true,
     "jest": true
   },
-  "extends": ["eslint:recommended"],
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module"
-  },
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "root": true,
   "rules": {},
   "globals": {
     "expect": true,
