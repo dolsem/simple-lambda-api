@@ -56,7 +56,7 @@ api_rules.handle((req, res) => {
     res.send({ method: req.method, rule: req._sampleRule })
   } else if (req.path === '/testNone') {
     req.log.trace('request #'+request++)
-    res.send('done')
+    res.send({ method: req.method, rule: req._sampleRule })
   } else if (req.path === '/testTarget') {
     req.log.trace('request #'+request++)
     res.send({ method: req.method, rule: req._sampleRule })
@@ -225,7 +225,7 @@ describe('Sampling Tests:', function() {
 
     it('Matches first rule in rules array', async () => {
       let _event = Object.assign({},event,{ path: '/testNone', queryStringParameters: { test: true } })
-      let result = await new Promise(r => api_rules.run(_event,context,(e,res) => { r(res) }))
+      let result = await api_rules.run(_event,context);
       let data = JSON.parse(result.body)
 
       expect(data.method).toBe('GET')
