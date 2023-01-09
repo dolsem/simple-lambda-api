@@ -14,7 +14,7 @@
     "lint:fix": "eslint . --fix",
     "test-cov": "jest unit --coverage",
     "test-ci": "npm run lint:check && jest unit --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "prepublishOnly": "npm run build && npm test && npm run lint:check",
     "changelog": "git log $(git describe --tags --abbrev=0)..HEAD --oneline"
   },
   "repository": {
