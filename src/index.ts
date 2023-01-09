@@ -116,6 +116,8 @@ export class API<S extends Stack = []> {
     // Configure logger
     this._logger = logger.config(props && props.logger, this._logLevels);
 
+    // bind .run() so that users can simplify handler to: `exports.handler = api.run`
+    this.run = this.run.bind(this);
   } // end constructor
 
   handle(handler: HandlerFunction<S>) {
