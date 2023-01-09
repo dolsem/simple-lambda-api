@@ -2,7 +2,7 @@ import {
   APIGatewayEventRequestContext,
   Context,
 } from 'aws-lambda';
-import { U } from 'ts-toolbelt';
+import { U, L } from 'ts-toolbelt';
 
 import API from './index';
 
@@ -114,7 +114,10 @@ export declare interface Options {
   headers?: object;
 }
 
-export declare type Stack = { Req: object; Res: object }[];
+export declare type Stack = { Req?: object; Res?: object }[];
+
+type StackReq<S extends Stack> = L.Select<S, { Req: object }>[number]['Req'];
+type StackRes<S extends Stack> = L.Select<S, { Res: object }>[number]['Res'];
 
 export declare class Request<S extends Stack = []> {
   constructor(app: API);
@@ -170,7 +173,7 @@ export declare class Request<S extends Stack = []> {
     fatal: LoggerFunction;
   };
 
-  ext: { [K in keyof (U.IntersectOf<S[number]['Req']>)]: U.IntersectOf<S[number]['Req']>[K]; }
+  ext: { [K in keyof (U.IntersectOf<StackReq<S>>)]: U.IntersectOf<StackReq<S>>[K]; }
 }
 
 export declare class Response<S extends Stack = []> {
@@ -216,7 +219,7 @@ export declare class Response<S extends Stack = []> {
     callback?: ErrorCallback
   ): Promise<void>;
 
-  ext: { [K in keyof (U.IntersectOf<S[number]['Res']>)]: U.IntersectOf<S[number]['Res']>[K]; }
+  ext: { [K in keyof (U.IntersectOf<StackRes<S>>)]: U.IntersectOf<StackRes<S>>[K]; }
 }
 
 export declare class ConfigurationError extends Error {

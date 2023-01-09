@@ -177,7 +177,7 @@ export class API<S extends Stack = []> {
   } // end run function
 
   // Middleware handler
-  use<S2 extends Stack = []>(...args: Middleware<S>[]) {
+  use<MS extends Middleware<Stack>[]>(...args: MS) {
     // Init middleware stack
 
     // Add func args as middleware
@@ -195,10 +195,11 @@ export class API<S extends Stack = []> {
         );
       }
     }
-    return this as API<L.Concat<S, S2>>;
+    type MiddlewareStack<T> = T extends [Middleware<infer S2>, ...infer R] ? L.Concat<S2, MiddlewareStack<R>> : [];
+    return this as API<L.Concat<S, MiddlewareStack<MS>>>;
   } // end use
 
-  catch<S2 extends Stack = []>(...args: ErrorHandlingMiddleware<S>[]) {
+  catch<MS extends ErrorHandlingMiddleware<Stack>[]>(...args: MS) {
     for (const arg in args) {
       if (typeof args[arg] === 'function') {
         this._errors.push(args[arg]);
@@ -208,12 +209,15 @@ export class API<S extends Stack = []> {
         );
       }
     }
-    return this as API<L.Concat<S, S2>>;
+
+    type MiddlewareStack<T> = T extends [ErrorHandlingMiddleware<infer S2>, ...infer R] ? L.Concat<S2, MiddlewareStack<R>> : [];
+    return this as API<L.Concat<S, MiddlewareStack<MS>>>;
   }
 
   // Finally handler
   finally(fn: FinallyFunction<S>) {
     this._finally = fn;
+    return this;
   }
 
   // Catch all async/sync errors
